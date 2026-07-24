@@ -1,0 +1,4 @@
+{
+  "extends": "../../../toolings/typescript/base.json",
+  "compilerOptions": { "strict": true }
+}

@@ -1,0 +1,3 @@
+# Compose topology placeholder — filled during implementation.
+# Expected: api, worker, db (postgis+pgvector), redis
+services: {}

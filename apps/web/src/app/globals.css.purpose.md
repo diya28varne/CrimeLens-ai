@@ -1,0 +1,1 @@
+Global CSS / Tailwind v4 tokens entry.

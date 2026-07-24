@@ -1,0 +1,36 @@
+# env & secrets
+.env
+.env.*
+!.env.example
+
+# deps
+node_modules/
+.pnpm-store/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.turbo/
+.next/
+dist/
+build/
+coverage/
+
+# ml artifacts / caches
+services/ml/artifacts/**
+!services/ml/artifacts/.gitkeep
+data/.cache/**
+!data/.cache/.gitkeep
+
+# IDE / OS
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+
+# generated clients
+apps/web/src/shared/api/generated/**
+!apps/web/src/shared/api/generated/.gitkeep

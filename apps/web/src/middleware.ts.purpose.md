@@ -1,0 +1,1 @@
+Next middleware for auth gate / headers (no business logic).

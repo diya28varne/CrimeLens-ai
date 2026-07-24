@@ -1,0 +1,14 @@
+[project]
+name = "crimelens-ai"
+version = "0.0.0"
+description = "CrimeLens AI monorepo (uv workspace root)"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.uv.workspace]
+members = [
+  "packages/py-domain",
+  "services/api",
+  "services/worker",
+  "services/ml",
+]

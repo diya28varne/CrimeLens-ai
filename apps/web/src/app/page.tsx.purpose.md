@@ -1,0 +1,1 @@
+Root route redirect to dashboard or login.
