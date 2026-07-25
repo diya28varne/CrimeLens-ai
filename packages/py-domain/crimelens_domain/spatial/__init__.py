@@ -1,0 +1,1 @@
+"""Spatial bounded context package."""

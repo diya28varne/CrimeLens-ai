@@ -1,1 +1,14 @@
-# CD placeholder: deploy staging on main
+name: CD Staging
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  stub:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Placeholder
+        run: echo "Staging deploy hooks land after hosting credentials are configured."

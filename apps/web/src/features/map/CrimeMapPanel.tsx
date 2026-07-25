@@ -1,0 +1,101 @@
+"use client";
+
+import dynamic from "next/dynamic";
+import { useState, type CSSProperties } from "react";
+
+import type { MapLayerMode, SeverityFilter } from "@/features/map/constants";
+
+const CrimeMapViewport = dynamic(
+  () =>
+    import("@/widgets/map-viewport/CrimeMapViewport").then((m) => m.CrimeMapViewport),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        style={{
+          minHeight: 520,
+          display: "grid",
+          placeItems: "center",
+          border: "1px solid var(--cl-border)",
+          borderRadius: 12,
+          color: "var(--cl-muted)",
+        }}
+      >
+        Loading map…
+      </div>
+    ),
+  },
+);
+
+export function CrimeMapPanel() {
+  const [layerMode, setLayerMode] = useState<MapLayerMode>("both");
+  const [severity, setSeverity] = useState<SeverityFilter>("all");
+
+  return (
+    <div style={{ display: "grid", gap: 12, height: "calc(100vh - 3rem)" }}>
+      <header style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "end" }}>
+        <div style={{ flex: 1, minWidth: 220 }}>
+          <h1 style={{ margin: 0 }}>Crime Map</h1>
+          <p style={{ margin: "6px 0 0", color: "var(--cl-muted)", fontSize: 14 }}>
+            MapLibre basemap + deck.gl points/heatmap over live PostGIS GeoJSON.
+          </p>
+        </div>
+        <label style={{ display: "grid", gap: 4, fontSize: 12, color: "var(--cl-muted)" }}>
+          Layer
+          <select
+            value={layerMode}
+            onChange={(e) => setLayerMode(e.target.value as MapLayerMode)}
+            style={selectStyle}
+          >
+            <option value="both">Points + heatmap</option>
+            <option value="points">Points only</option>
+            <option value="heatmap">Heatmap only</option>
+          </select>
+        </label>
+        <label style={{ display: "grid", gap: 4, fontSize: 12, color: "var(--cl-muted)" }}>
+          Severity
+          <select
+            value={severity}
+            onChange={(e) => setSeverity(e.target.value as SeverityFilter)}
+            style={selectStyle}
+          >
+            <option value="all">All</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="critical">Critical</option>
+          </select>
+        </label>
+      </header>
+
+      <div style={{ flex: 1, minHeight: 0 }}>
+        <CrimeMapViewport layerMode={layerMode} severity={severity} />
+      </div>
+
+      <footer style={{ display: "flex", gap: 14, flexWrap: "wrap", fontSize: 12, color: "var(--cl-muted)" }}>
+        <LegendSwatch color="rgb(90, 200, 250)" label="Low" />
+        <LegendSwatch color="rgb(255, 204, 0)" label="Medium" />
+        <LegendSwatch color="rgb(255, 149, 0)" label="High" />
+        <LegendSwatch color="rgb(255, 69, 58)" label="Critical" />
+      </footer>
+    </div>
+  );
+}
+
+function LegendSwatch({ color, label }: { color: string; label: string }) {
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+      <span style={{ width: 10, height: 10, borderRadius: 999, background: color }} />
+      {label}
+    </span>
+  );
+}
+
+const selectStyle: CSSProperties = {
+  background: "var(--cl-surface)",
+  color: "var(--cl-text)",
+  border: "1px solid var(--cl-border)",
+  borderRadius: 8,
+  padding: "8px 10px",
+  minWidth: 160,
+};

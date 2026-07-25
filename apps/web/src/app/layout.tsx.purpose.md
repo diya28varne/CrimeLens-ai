@@ -1,1 +1,0 @@
-Root layout shell (fonts, theme provider, metadata).

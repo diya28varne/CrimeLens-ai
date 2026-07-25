@@ -1,1 +1,0 @@
-FastAPI composition root: routers, middleware, lifespan.

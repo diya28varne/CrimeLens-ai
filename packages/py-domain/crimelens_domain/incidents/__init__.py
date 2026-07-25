@@ -1,0 +1,1 @@
+"""Incidents bounded context package."""

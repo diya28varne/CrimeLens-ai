@@ -1,3 +1,82 @@
-# Compose topology placeholder — filled during implementation.
-# Expected: api, worker, db (postgis+pgvector), redis
-services: {}
+# CrimeLens AI local stack — Phase 1 foundation
+name: crimelens
+
+services:
+  db:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.db
+    container_name: crimelens-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-crimelens}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-crimelens}
+      POSTGRES_DB: ${POSTGRES_DB:-crimelens}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - crimelens_pgdata:/var/lib/postgresql/data
+      - ./infra/docker/initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-crimelens} -d ${POSTGRES_DB:-crimelens}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: crimelens-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - crimelens_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.api
+    container_name: crimelens-api
+    env_file:
+      - .env.example
+    environment:
+      APP_ENV: local
+      POSTGRES_URL: postgresql+psycopg://${POSTGRES_USER:-crimelens}:${POSTGRES_PASSWORD:-crimelens}@db:5432/${POSTGRES_DB:-crimelens}
+      REDIS_URL: redis://redis:6379/0
+      CORS_ORIGINS: http://localhost:3000
+    ports:
+      - "${API_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  worker:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.worker
+    container_name: crimelens-worker
+    env_file:
+      - .env.example
+    environment:
+      APP_ENV: local
+      POSTGRES_URL: postgresql+psycopg://${POSTGRES_USER:-crimelens}:${POSTGRES_PASSWORD:-crimelens}@db:5432/${POSTGRES_DB:-crimelens}
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  crimelens_pgdata:
+  crimelens_redis:

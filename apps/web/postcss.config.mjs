@@ -1,2 +1,7 @@
-// Tailwind v4 / PostCSS placeholder.
-export default {};
+const config = {
+  plugins: {
+    "@tailwindcss/postcss": {},
+  },
+};
+
+export default config;

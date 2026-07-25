@@ -1,4 +1,11 @@
-{
+﻿{
   "name": "@crimelens/web-ui",
-  "private": true
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "lint": "echo skip",
+    "typecheck": "echo skip",
+    "test": "echo skip",
+    "build": "echo skip"
+  }
 }
