@@ -48,7 +48,7 @@ function stageColor(stage: string): [number, number, number, number] {
   }
 }
 
-export function StoryPlaybackPanel() {
+export function StoryPlaybackPanel({ explainHref = "/explain" }: { explainHref?: string }) {
   const [frames, setFrames] = useState<StoryFrame[]>([]);
   const [chapters, setChapters] = useState<StoryChapter[]>([]);
   const [events, setEvents] = useState<StoryEvent[]>([]);
@@ -240,10 +240,23 @@ export function StoryPlaybackPanel() {
         <div>
           <h1 style={{ margin: 0, fontSize: 22 }}>Crime Story Playback</h1>
           <p style={{ margin: "4px 0 0", color: "var(--cl-muted)", fontSize: 13 }}>
-            Rewind the city — watch how hotspots form, and investigate any moment.
+            Rewind the city — watch how hotspots form, and investigate any moment. Chapters, detective brief, and journey are all here.
           </p>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          <Link
+            href={explainHref}
+            style={{
+              border: "1px solid var(--cl-border)",
+              borderRadius: 8,
+              padding: "8px 12px",
+              color: "var(--cl-text)",
+              textDecoration: "none",
+              fontSize: 13,
+            }}
+          >
+            ← Back to Explain
+          </Link>
           <label style={{ fontSize: 12, color: "var(--cl-muted)" }}>
             Pattern replay{" "}
             <select

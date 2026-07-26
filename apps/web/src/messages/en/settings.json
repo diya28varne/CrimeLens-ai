@@ -14,14 +14,5 @@
   "roles": "Roles",
   "permissions": "Permissions",
   "signOut": "Sign out",
-  "errorLoad": "Failed to load settings",
-  "admin": {
-    "title": "Administration",
-    "subtitle": "Users, roles, feature flags, and AI audit snapshot.",
-    "users": "Users",
-    "roles": "Roles",
-    "flags": "Feature flags",
-    "audit": "AI audit",
-    "errorLoad": "Failed to load admin overview"
-  }
+  "errorLoad": "Failed to load settings"
 }

@@ -16,9 +16,11 @@ import { ApiError } from "@/shared/api/client";
 
 type Props = {
   initialValueId?: string | null;
+  /** Link to full Story playback (combined hub). */
+  storyHref?: string;
 };
 
-export function ExplainPanel({ initialValueId = null }: Props) {
+export function ExplainPanel({ initialValueId = null, storyHref = "/explain?view=story" }: Props) {
   const [values, setValues] = useState<PredictionValue[]>([]);
   const [selected, setSelected] = useState<string | null>(initialValueId);
   const [card, setCard] = useState<DecisionCard | null>(null);
@@ -112,11 +114,17 @@ export function ExplainPanel({ initialValueId = null }: Props) {
           <h1 style={{ margin: 0, fontSize: 22 }}>Explainable AI Decision Engine</h1>
           <p style={{ margin: "4px 0 0", color: "var(--cl-muted)", fontSize: 13 }}>
             Don’t just predict — prove it. Decision cards with factors, evidence, and audit trail.
+            Open Story to replay how patterns evolved over time.
           </p>
         </div>
-        <Link href="/prediction" style={linkBtn}>
-          Back to Prediction
-        </Link>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          <Link href={storyHref} style={storyLinkBtn}>
+            Open Story playback →
+          </Link>
+          <Link href="/prediction" style={linkBtn}>
+            Back to Prediction
+          </Link>
+        </div>
       </header>
 
       <div style={disclaimerStyle}>
@@ -425,6 +433,17 @@ const linkBtn: CSSProperties = {
   color: "var(--cl-text)",
   textDecoration: "none",
   fontSize: 13,
+};
+
+const storyLinkBtn: CSSProperties = {
+  border: "1px solid rgba(61,139,253,0.5)",
+  borderRadius: 8,
+  padding: "8px 12px",
+  color: "#9ec1ff",
+  background: "rgba(61,139,253,0.14)",
+  textDecoration: "none",
+  fontSize: 13,
+  fontWeight: 700,
 };
 
 const ghostBtn: CSSProperties = {

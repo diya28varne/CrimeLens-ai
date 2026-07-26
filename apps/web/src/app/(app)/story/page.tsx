@@ -1,7 +1,6 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { StoryPlaybackPanel } from "@/features/story";
-
+/** Story lives under Explain — keep old /story URLs working. */
 export default function StoryPage() {
-  return <StoryPlaybackPanel />;
+  redirect("/explain?view=story");
 }

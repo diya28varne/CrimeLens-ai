@@ -59,15 +59,13 @@ CrimeLens AI is a modular monorepo that delivers:
 |---------|-------|---------|
 | Digital Twin Simulator | `/simulation` | Scenario simulation for “what if” resource and pattern exploration |
 | Strategic Intelligence Advisor | `/advisor` | Actionable deployment and priority guidance |
-| Crime Story Playback | `/story` | Temporal narrative / detective-mode reconstruction |
-| Explainable AI (XAI) | `/explain` | Model decision breakdowns for trust and review |
+| Explainable AI + Story | `/explain` | Decision breakdowns + crime story playback (`?view=story`) |
 | Executive Intelligence Reports | `/reports` | Briefing builder with present/print-oriented output |
 
 ### Platform foundations
 
 - JWT + cookie session auth with role-based access control (RBAC)
 - Jurisdiction-aware data scoping (district / station)
-- Admin overview (users, roles, permissions, feature flags, AI audit snapshot)
 - User settings (profile and local preferences)
 - OpenAPI-documented REST surface under `/api/v1`
 
@@ -82,13 +80,11 @@ CrimeLens AI is a modular monorepo that delivers:
 | `/prediction` | Predictive risk views |
 | `/simulation` | Digital twin simulator |
 | `/advisor` | Strategic intelligence advisor |
-| `/story` | Crime story playback |
-| `/explain` | Explainable AI engine |
+| `/explain` | Explainable AI + Story playback (`?view=story`) |
 | `/network` | Network / link analysis |
 | `/reports` | Executive reports + present mode |
 | `/ai` | AI copilot entry |
 | `/settings` | User preferences |
-| `/admin` | Administration & audit snapshot |
 | `/login` | Sign-in |
 
 **Dashboard vs Analytics:** Dashboard answers “what is happening now?” Analytics answers “why, how has it changed, and where should we act?”
@@ -340,7 +336,6 @@ Representative module groups:
 - Predictions
 - Network
 - Simulation, advisor, story, explain, reports
-- Admin overview
 
 Contract exploration: http://localhost:8000/docs  
 Design reference: [`docs/api/REST_API.md`](./docs/api/REST_API.md)
@@ -430,7 +425,7 @@ Then rotate every secret that lived in that file. If the secret was pushed to a 
 | Socio-economic correlation | Live |
 | Prediction & network modules | Live |
 | Flagship features 1–5 | Live (P1) |
-| Settings & Admin panels | Live |
+| Settings panel | Live |
 | Multilingual EN / ಕನ್ನಡ | Live (react-i18next) |
 
 Current API version is published in OpenAPI (`info.version`) when the stack is running.

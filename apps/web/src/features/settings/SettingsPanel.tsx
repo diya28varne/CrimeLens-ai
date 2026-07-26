@@ -130,9 +130,6 @@ export function SettingsPanel() {
             <button type="button" onClick={signOut} style={primaryBtn}>
               {t("signOut")}
             </button>
-            <Link href="/admin" style={ghostLink}>
-              {t("admin.title")}
-            </Link>
           </div>
         </Section>
       ) : null}
@@ -279,12 +276,4 @@ const primaryBtn: CSSProperties = {
   padding: "8px 12px",
   fontWeight: 600,
   cursor: "pointer",
-};
-const ghostLink: CSSProperties = {
-  border: "1px solid var(--cl-border)",
-  borderRadius: 8,
-  padding: "8px 12px",
-  color: "var(--cl-text)",
-  textDecoration: "none",
-  fontSize: 13,
 };

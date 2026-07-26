@@ -40,12 +40,10 @@
     "prediction": "Prediction",
     "simulation": "Simulation",
     "advisor": "Advisor",
-    "story": "Story",
-    "explain": "Explain",
+    "explain": "Explain & Story",
     "network": "Network",
     "reports": "Reports",
     "ai": "AI Copilot",
-    "settings": "Settings",
-    "admin": "Admin"
+    "settings": "Settings"
   }
 }

@@ -14,13 +14,11 @@ const NAV_ITEMS: Array<{ href: string; key: string }> = [
   { href: "/prediction", key: "nav.prediction" },
   { href: "/simulation", key: "nav.simulation" },
   { href: "/advisor", key: "nav.advisor" },
-  { href: "/story", key: "nav.story" },
   { href: "/explain", key: "nav.explain" },
   { href: "/network", key: "nav.network" },
   { href: "/reports", key: "nav.reports" },
   { href: "/ai", key: "nav.ai" },
   { href: "/settings", key: "nav.settings" },
-  { href: "/admin", key: "nav.admin" },
 ];
 
 export default function AppShellLayout({ children }: { children: ReactNode }) {
@@ -52,9 +50,15 @@ export default function AppShellLayout({ children }: { children: ReactNode }) {
           {t("appTagline")}
         </div>
 
-        <nav style={{ display: "grid", gap: 4, flex: 1 }}>
+        <nav style={{ display: "grid", gap: 4, flex: 1, alignContent: "start" }}>
           {NAV_ITEMS.map((item) => {
-            const active = pathname === item.href || pathname?.startsWith(`${item.href}/`);
+            const active =
+              item.href === "/explain"
+                ? pathname === "/explain" ||
+                  pathname?.startsWith("/explain/") ||
+                  pathname === "/story" ||
+                  pathname?.startsWith("/story/")
+                : pathname === item.href || pathname?.startsWith(`${item.href}/`);
             return (
               <Link
                 key={item.href}
