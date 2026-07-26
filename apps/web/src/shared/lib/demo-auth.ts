@@ -116,8 +116,20 @@ export async function proxyToUpstream(
   request: Request,
 ): Promise<Response> {
   const url = `${upstream}${path}`;
-  const headers = new Headers(request.headers);
-  headers.delete("host");
+  const headers = new Headers();
+  const allow = [
+    "accept",
+    "accept-language",
+    "authorization",
+    "content-type",
+    "cookie",
+    "x-crimelens-locale",
+  ];
+  for (const key of allow) {
+    const value = request.headers.get(key);
+    if (value) headers.set(key, value);
+  }
+
   const init: RequestInit = {
     method: request.method,
     headers,
@@ -126,10 +138,22 @@ export async function proxyToUpstream(
   if (request.method !== "GET" && request.method !== "HEAD") {
     init.body = await request.arrayBuffer();
   }
+
   const upstreamRes = await fetch(url, init);
-  return new Response(upstreamRes.body, {
+  // Buffer the body so we can drop content-encoding headers that break clients
+  // when undici already decoded the stream.
+  const body = await upstreamRes.arrayBuffer();
+  const outHeaders = new Headers();
+  const contentType = upstreamRes.headers.get("content-type");
+  if (contentType) outHeaders.set("content-type", contentType);
+  const setCookie = upstreamRes.headers.getSetCookie?.() ?? [];
+  for (const cookie of setCookie) {
+    outHeaders.append("set-cookie", cookie);
+  }
+
+  return new Response(body, {
     status: upstreamRes.status,
     statusText: upstreamRes.statusText,
-    headers: upstreamRes.headers,
+    headers: outHeaders,
   });
 }
