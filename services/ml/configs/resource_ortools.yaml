@@ -1,0 +1,26 @@
+# Police resource optimization (Dataset D6)
+model_code: resource_ortools
+model_task: resource_optimization
+primary_solver: ortools_cpsat
+fallback_solver: greedy_coverage
+feature_set_id: resource_v1
+
+constraints:
+  max_zones_per_shift: 3
+  min_officers_per_zone: 2
+  max_travel_minutes: 45
+
+objective_weights:
+  hotspot_score: 0.45
+  crime_density: 0.30
+  coverage_gap: 0.15
+  event_load: 0.10
+
+shifts:
+  - morning
+  - afternoon
+  - night
+
+serves:
+  - /advisor
+  - /simulation

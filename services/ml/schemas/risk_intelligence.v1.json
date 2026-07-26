@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crimelens.local/schemas/risk_intelligence.v1.json",
+  "title": "Crime Risk Intelligence",
+  "type": "object",
+  "required": ["district_code", "grid_cell_id", "as_of_ts", "risk_level", "feature_set_id"],
+  "properties": {
+    "district_code": { "type": "string" },
+    "station_code": { "type": "string" },
+    "grid_cell_id": { "type": "string" },
+    "as_of_ts": { "type": "string" },
+    "risk_level": { "enum": ["Low", "Medium", "High", "Critical"] },
+    "risk_score": { "type": "number", "minimum": 0, "maximum": 1 },
+    "feature_set_id": { "type": "string" }
+  }
+}

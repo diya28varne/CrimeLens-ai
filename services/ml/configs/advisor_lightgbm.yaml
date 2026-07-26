@@ -1,0 +1,62 @@
+# Strategic Intelligence Advisor ranker (Dataset D3)
+model_code: advisor_lgbm
+model_task: decision
+algorithm: lightgbm  # falls back to sklearn HistGradientBoosting
+feature_set_id: advisor_v1
+status: active
+
+actions:
+  - Increase Patrol
+  - Deploy CCTV
+  - Deploy Drone
+  - Traffic Diversion
+  - Community Awareness
+  - Emergency Response
+  - Investigation Priority
+  - No Action
+
+features:
+  - risk_score
+  - CrimeFrequency7Days
+  - CrimeFrequency30Days
+  - NightCrimeRatio
+  - FestivalImpactScore
+  - PatrolCoverageIndex
+  - CCTVCoverageIndex
+  - EmergencyResponseScore
+  - RepeatOffenderScore
+  - HotspotPersistenceScore
+  - SocioEconomicRiskIndex
+  - officers_available
+  - vehicles_available
+  - budget_remaining_norm
+  - cctv_slots_open
+  - drone_available
+  - action_success_rate_hist
+  - avg_response_minutes
+  - clearance_rate_30d
+
+lightgbm:
+  n_estimators: 150
+  learning_rate: 0.07
+  num_leaves: 31
+  max_depth: 6
+  subsample: 0.9
+  colsample_bytree: 0.85
+
+sklearn_fallback:
+  max_iter: 200
+  learning_rate: 0.08
+  max_depth: 6
+
+split:
+  method: temporal
+  train_ratio: 0.7
+  val_ratio: 0.15
+  test_ratio: 0.15
+
+class_weight: balanced
+serves:
+  - /advisor
+  - /reports
+  - /simulation

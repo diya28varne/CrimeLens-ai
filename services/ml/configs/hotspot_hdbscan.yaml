@@ -1,0 +1,36 @@
+# Smart Hotspot Evolution — HDBSCAN / DBSCAN (Dataset D2)
+model_code: hotspot_hdbscan
+model_task: hotspot
+primary_algorithm: hdbscan
+fallback_algorithm: dbscan
+feature_set_id: hotspot_v1
+
+growth_labels: [Growing, Stable, Shrinking]
+
+spatial:
+  grid_deg: 0.02
+  min_cluster_size: 8
+  min_samples: 4
+  dbscan_eps: 0.035
+  dbscan_min_samples: 5
+
+features:
+  - incident_density
+  - historical_density_30d
+  - traffic_index
+  - population_flow_index
+  - lighting_index
+  - road_connectivity_score
+  - cctv_density
+  - patrol_density
+  - dist_market_m
+  - dist_school_m
+  - festival_impact
+  - weather_impact
+  - density_delta_7d
+  - density_delta_30d
+
+growth_classifier:
+  algorithm: gradient_boosting
+  n_estimators: 80
+  max_depth: 3

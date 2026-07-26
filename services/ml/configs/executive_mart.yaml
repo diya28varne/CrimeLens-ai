@@ -1,0 +1,12 @@
+# Executive intelligence mart (Dataset D5) — feeds /reports LLM context packs
+mart_code: executive_mart
+feature_set_id: executive_v1
+period_types:
+  - week
+  - month
+outputs:
+  - datasets/engineered/executive_mart/latest.parquet
+  - datasets/engineered/executive_mart/context_packs.json
+serves:
+  - /reports
+  - /advisor

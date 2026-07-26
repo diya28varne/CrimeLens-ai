@@ -1,13 +1,30 @@
 [project]
 name = "crimelens-ml"
-version = "0.1.0"
-description = "CrimeLens offline ML pipelines"
+version = "0.2.0"
+description = "CrimeLens AI offline ML plane — risk, hotspot, advisor features, SHAP-compatible attributions"
 requires-python = ">=3.12"
 dependencies = [
   "crimelens-domain",
   "polars>=1.17",
   "numpy>=2.1",
+  "pandas>=2.2",
+  "pyarrow>=18.0",
+  "scikit-learn>=1.5",
+  "xgboost>=2.1",
+  "pyyaml>=6.0",
+  "joblib>=1.4",
 ]
+
+[project.optional-dependencies]
+shap = ["shap>=0.46"]
+hotspot = ["hdbscan>=0.8.38"]
+advisor = ["lightgbm>=4.5"]
+optimize = ["ortools>=9.10"]
+dev = ["pytest>=8.0"]
+all = ["hdbscan>=0.8.38", "lightgbm>=4.5", "ortools>=9.10"]
+
+[project.scripts]
+crimelens-ml = "crimelens_ml.cli:main"
 
 [tool.uv.sources]
 crimelens-domain = { workspace = true }
@@ -17,7 +34,8 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["crimelens_ml"]
+packages = ["src/crimelens_ml"]
 
-[tool.hatch.build.targets.wheel.sources]
-"crimelens_ml" = "src/crimelens_ml"
+[tool.hatch.build.targets.editable]
+# Ensure `uv run` can import crimelens_ml from src/
+dev-mode-dirs = ["src"]

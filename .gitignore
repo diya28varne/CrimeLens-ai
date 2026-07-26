@@ -66,6 +66,12 @@ pnpm-debug.log*
 # ---------------------------------------------------------------------------
 services/ml/artifacts/**
 !services/ml/artifacts/.gitkeep
+services/ml/datasets/**/*.parquet
+services/ml/datasets/**/*.json
+services/ml/reports/*.json
+services/ml/reports/*.md
+!services/ml/reports/.gitkeep
+!services/ml/datasets/**/.gitkeep
 data/.cache/**
 !data/.cache/.gitkeep
 .cache/

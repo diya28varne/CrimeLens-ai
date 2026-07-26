@@ -1,0 +1,51 @@
+# Crime Risk Intelligence — XGBoost (Dataset D1)
+model_code: risk_xgb
+model_task: risk
+algorithm: xgboost
+feature_set_id: risk_v1
+
+target_label: risk_level
+target_score: risk_score
+label_order: [Low, Medium, High, Critical]
+
+features:
+  - CrimeFrequency7Days
+  - CrimeFrequency30Days
+  - WeekendCrimeRatio
+  - NightCrimeRatio
+  - FestivalImpactScore
+  - CommercialRiskScore
+  - PatrolCoverageIndex
+  - CCTVCoverageIndex
+  - EmergencyResponseScore
+  - WeatherRiskIndex
+  - MobilityScore
+  - RoadAccessibilityScore
+  - HistoricalSimilarityScore
+  - RepeatOffenderScore
+  - HotspotPersistenceScore
+  - SocioEconomicRiskIndex
+  - hour_sin
+  - hour_cos
+  - is_weekend
+  - is_night
+  - population_density
+  - unemployment_rate
+
+xgboost:
+  n_estimators: 120
+  max_depth: 5
+  learning_rate: 0.08
+  subsample: 0.9
+  colsample_bytree: 0.85
+  objective: multi:softprob
+  eval_metric: mlogloss
+  num_class: 4
+
+split:
+  method: temporal
+  train_ratio: 0.7
+  val_ratio: 0.15
+  test_ratio: 0.15
+
+class_weight: balanced

@@ -348,6 +348,41 @@ Design reference: [`docs/api/REST_API.md`](./docs/api/REST_API.md)
 
 ---
 
+## Offline ML plane (Phase A/B)
+
+CrimeLens includes a dedicated offline ML ecosystem under `services/ml/` that powers risk, hotspot, explainability, and (next) advisor/report marts.
+
+Architecture: [`docs/ml/CRIMELENS_ML_ECOSYSTEM.md`](./docs/ml/CRIMELENS_ML_ECOSYSTEM.md)  
+Feature catalog: [`docs/ml/features/catalog.md`](./docs/ml/features/catalog.md)
+
+```bash
+# After uv sync --all-packages
+uv run --package crimelens-ml crimelens-ml run-phase-ab
+# or
+make ml-phase-ab
+```
+
+This will:
+
+1. Generate a Karnataka-scoped **domain synthetic world** (not toy random CSVs)
+2. Engineer CrimeLens features (`CrimeFrequency7Days`, `FestivalImpactScore`, …)
+3. Train **XGBoost** risk (`Low|Medium|High|Critical`) with temporal split + eval report
+4. Run **HDBSCAN/DBSCAN** hotspot clustering + growth classifier
+5. Write SHAP-style attributions (`xgboost.pred_contribs`) for `/explain` audit shape
+
+Artifacts land in `services/ml/artifacts/` and `services/ml/reports/` (gitignored). Postgres promotion into `prediction_*` / `hotspot_*` / `explanation_artifacts` is prepared via `crimelens-ml promote`.
+
+### Phase C (decision + narrative)
+
+```bash
+make ml-phase-c
+# or: uv run --package crimelens-ml crimelens-ml run-phase-c
+```
+
+Builds Advisor action ranker (D3), executive mart/context packs for `/reports` (D5), patrol resource plan (D6), and a promotion manifest. See [`docs/ml/PHASE_C_STATUS.md`](./docs/ml/PHASE_C_STATUS.md).
+
+---
+
 ## Documentation
 
 | Document | Contents |

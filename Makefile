@@ -1,4 +1,4 @@
-.PHONY: help bootstrap up down api-test domain-test web-dev api-dev migrate seed
+.PHONY: help bootstrap up down api-test domain-test web-dev api-dev migrate seed ml-phase-ab ml-phase-c
 
 help:
 	@echo "CrimeLens AI commands"
@@ -11,6 +11,8 @@ help:
 	@echo "  make api-test    Run API unit tests"
 	@echo "  make api-dev     Run API locally"
 	@echo "  make web-dev     Run Next.js locally"
+	@echo "  make ml-phase-ab Synthesize + train risk + hotspot (offline ML)"
+	@echo "  make ml-phase-c  Advisor + executive mart + resources + promote"
 
 bootstrap:
 	pnpm install
@@ -37,6 +39,12 @@ domain-test:
 
 api-test:
 	uv run --package crimelens-api pytest services/api/tests/unit -q
+
+ml-phase-ab:
+	uv run --package crimelens-ml crimelens-ml run-phase-ab
+
+ml-phase-c:
+	uv run --package crimelens-ml crimelens-ml run-phase-c
 
 api-dev:
 	uv run --package crimelens-api uvicorn app.main:app --reload --app-dir services/api --host 0.0.0.0 --port 8000

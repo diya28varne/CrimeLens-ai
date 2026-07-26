@@ -1,3 +1,3 @@
-"""CrimeLens ML library — pipelines implemented in later phases."""
+"""CrimeLens ML library — offline prediction plane for the CrimeLens platform."""
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"

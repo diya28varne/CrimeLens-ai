@@ -1,0 +1,21 @@
+# Shared CrimeLens ML defaults (Karnataka-scoped offline plane)
+project: crimelens-ai
+timezone: Asia/Kolkata
+crs: EPSG:4326
+geohash_precision: 7
+
+# Approximate Karnataka bounding box (WGS84) for validation / synthetic
+karnataka_bbox:
+  min_lon: 74.0
+  max_lon: 78.6
+  min_lat: 11.5
+  max_lat: 18.5
+
+paths:
+  datasets: datasets
+  artifacts: artifacts
+  reports: reports
+  configs: configs
+
+feature_set_id: risk_v1
+random_seed: 42
