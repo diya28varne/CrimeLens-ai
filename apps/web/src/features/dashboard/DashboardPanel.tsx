@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
-import type { EChartsOption } from "echarts";
+import { useTranslation } from "react-i18next";
 
 import {
   fetchDashboardAlerts,
@@ -10,9 +10,9 @@ import {
   type DashboardAlert,
   type DashboardOverview,
 } from "@/features/dashboard/api";
-import { Chart } from "@/shared/ui/Chart";
-import { useTranslation } from "react-i18next";
+import { AnalyticsPanel } from "@/features/analytics";
 
+/** Combined command overview + analytics insights under one Dashboard. */
 export function DashboardPanel() {
   const { t } = useTranslation("dashboard");
   const { t: tc } = useTranslation("common");
@@ -48,88 +48,12 @@ export function DashboardPanel() {
     };
   }, [t]);
 
-  const trendOption: EChartsOption | null = overview
-    ? {
-        tooltip: { trigger: "axis" },
-        grid: { left: 40, right: 16, top: 24, bottom: 32 },
-        xAxis: {
-          type: "category",
-          data: overview.trend_daily.map((d) => d.date.slice(5)),
-          axisLabel: { color: "#9aa8c7" },
-          axisLine: { lineStyle: { color: "#243049" } },
-        },
-        yAxis: {
-          type: "value",
-          minInterval: 1,
-          splitLine: { lineStyle: { color: "#243049" } },
-          axisLabel: { color: "#9aa8c7" },
-        },
-        series: [
-          {
-            type: "line",
-            smooth: true,
-            data: overview.trend_daily.map((d) => d.count),
-            areaStyle: { color: "rgba(61, 139, 253, 0.18)" },
-            lineStyle: { color: "#3d8bfd", width: 2 },
-            itemStyle: { color: "#3d8bfd" },
-          },
-        ],
-      }
-    : null;
-
-  const severityOption: EChartsOption | null = overview
-    ? {
-        tooltip: { trigger: "item" },
-        series: [
-          {
-            type: "pie",
-            radius: ["42%", "68%"],
-            label: { color: "#e8eefc" },
-            data: overview.by_severity.map((s) => ({
-              name: s.name,
-              value: s.count,
-            })),
-            color: ["#5ac8fa", "#ffcc00", "#ff9500", "#ff453a"],
-          },
-        ],
-      }
-    : null;
-
-  const offenseOption: EChartsOption | null = overview
-    ? {
-        tooltip: { trigger: "axis" },
-        grid: { left: 100, right: 24, top: 16, bottom: 24 },
-        xAxis: {
-          type: "value",
-          minInterval: 1,
-          splitLine: { lineStyle: { color: "#243049" } },
-          axisLabel: { color: "#9aa8c7" },
-        },
-        yAxis: {
-          type: "category",
-          data: overview.by_offense_top.map((o) => o.name).reverse(),
-          axisLabel: { color: "#9aa8c7", width: 90, overflow: "truncate" },
-        },
-        series: [
-          {
-            type: "bar",
-            data: overview.by_offense_top.map((o) => o.count).reverse(),
-            itemStyle: { color: "#1f6feb", borderRadius: [0, 4, 4, 0] },
-          },
-        ],
-      }
-    : null;
-
   return (
-    <div style={{ display: "grid", gap: 16 }}>
+    <div style={{ display: "grid", gap: 28 }}>
       <header>
         <h1 style={{ margin: 0 }}>{t("title")}</h1>
         <p style={{ margin: "6px 0 0", color: "var(--cl-muted)", fontSize: 14 }}>
           {t("subtitle")}{" "}
-          <Link href="/analytics" style={{ color: "var(--cl-accent)" }}>
-            {t("linkAnalytics")}
-          </Link>
-          .{" "}
           <Link href="/map" style={{ color: "var(--cl-accent)" }}>
             {t("linkMap")}
           </Link>
@@ -137,8 +61,8 @@ export function DashboardPanel() {
       </header>
 
       {error && (
-        <div style={bannerStyle("#ff453a")}>
-          {error}. {tc("signIn")} — analytics read.
+        <div style={bannerStyle}>
+          {error}. {tc("signIn")}
         </div>
       )}
 
@@ -157,71 +81,28 @@ export function DashboardPanel() {
         />
         <Kpi label={t("kpi.openCases")} value={overview?.kpis.open_incidents} loading={loading} />
         <Kpi label={t("kpi.highCritical")} value={overview?.kpis.high_severity} loading={loading} />
-        <Kpi
-          label={t("kpi.hotspots")}
-          value={overview?.kpis.hotspot_count}
-          hint={t("charts.trend30d")}
-          loading={loading}
-        />
+        <Kpi label={t("kpi.hotspots")} value={overview?.kpis.hotspot_count} loading={loading} />
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(0, 1.4fr) minmax(0, 1fr)",
-          gap: 12,
-        }}
-        className="cl-dash-charts"
-      >
-        <Panel title={t("charts.trend30d")}>
-          {trendOption ? <Chart option={trendOption} height={260} loading={loading} /> : <Empty label={tc("noData")} />}
-        </Panel>
-        <Panel title={t("charts.severityMix")}>
-          {severityOption ? (
-            <Chart option={severityOption} height={260} loading={loading} />
-          ) : (
-            <Empty label={tc("noData")} />
-          )}
-        </Panel>
-      </div>
+      <Panel title={t("alerts.title")}>
+        <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 10 }}>
+          {alerts.map((a) => (
+            <li key={a.id} style={alertItemStyle(a.severity)}>
+              <div style={{ fontWeight: 600, fontSize: 14 }}>{a.title}</div>
+              <div style={{ color: "var(--cl-muted)", fontSize: 13, marginTop: 4 }}>{a.body}</div>
+              {a.href && (
+                <Link href={a.href} style={{ color: "var(--cl-accent)", fontSize: 12 }}>
+                  {t("alerts.view")} →
+                </Link>
+              )}
+            </li>
+          ))}
+          {!loading && alerts.length === 0 && <Empty label={t("alerts.empty")} />}
+        </ul>
+      </Panel>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(0, 1.2fr) minmax(0, 1fr)",
-          gap: 12,
-        }}
-      >
-        <Panel title={t("charts.topOffenses")}>
-          {offenseOption ? (
-            <Chart option={offenseOption} height={240} loading={loading} />
-          ) : (
-            <Empty label={tc("noData")} />
-          )}
-        </Panel>
-        <Panel title={t("alerts.title")}>
-          <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 10 }}>
-            {alerts.map((a) => (
-              <li key={a.id} style={alertItemStyle(a.severity)}>
-                <div style={{ fontWeight: 600, fontSize: 14 }}>{a.title}</div>
-                <div style={{ color: "var(--cl-muted)", fontSize: 13, marginTop: 4 }}>{a.body}</div>
-                {a.href && (
-                  <Link href={a.href} style={{ color: "var(--cl-accent)", fontSize: 12 }}>
-                    {t("alerts.view")} →
-                  </Link>
-                )}
-              </li>
-            ))}
-            {!loading && alerts.length === 0 && <Empty label={t("alerts.empty")} />}
-          </ul>
-        </Panel>
-      </div>
-
-      <style>{`
-        @media (max-width: 900px) {
-          .cl-dash-charts { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
+      {/* Exactly two charts: period impact + offense concentration */}
+      <AnalyticsPanel embedded />
     </div>
   );
 }
@@ -230,13 +111,11 @@ function Kpi({
   label,
   value,
   delta,
-  hint,
   loading,
 }: {
   label: string;
   value?: number;
   delta?: number | null;
-  hint?: string;
   loading?: boolean;
 }) {
   return (
@@ -257,9 +136,6 @@ function Kpi({
           {delta}% vs prior window
         </div>
       )}
-      {hint && (
-        <div style={{ fontSize: 11, color: "var(--cl-muted)", marginTop: 4 }}>{hint}</div>
-      )}
     </div>
   );
 }
@@ -275,7 +151,7 @@ function Panel({ title, children }: { title: string; children: ReactNode }) {
 
 function Empty({ label = "—" }: { label?: string }) {
   return (
-    <div style={{ color: "var(--cl-muted)", fontSize: 13, padding: "2rem 0", textAlign: "center" }}>
+    <div style={{ color: "var(--cl-muted)", fontSize: 13, padding: "1rem 0", textAlign: "center" }}>
       {label}
     </div>
   );
@@ -288,16 +164,14 @@ const panelStyle: CSSProperties = {
   padding: "14px 16px",
 };
 
-function bannerStyle(color: string): CSSProperties {
-  return {
-    border: `1px solid ${color}`,
-    borderRadius: 10,
-    padding: "10px 12px",
-    color: "var(--cl-text)",
-    background: "rgba(255,69,58,0.08)",
-    fontSize: 14,
-  };
-}
+const bannerStyle: CSSProperties = {
+  border: "1px solid #ff453a",
+  borderRadius: 10,
+  padding: "10px 12px",
+  color: "var(--cl-text)",
+  background: "rgba(255,69,58,0.08)",
+  fontSize: 14,
+};
 
 function alertItemStyle(severity: string): CSSProperties {
   const accent =

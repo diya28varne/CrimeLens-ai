@@ -3,29 +3,17 @@
 import Link from "next/link";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import type { EChartsOption } from "echarts";
+import { useTranslation } from "react-i18next";
 
 import {
   fetchBreakdown,
-  fetchCorrelation,
-  fetchCorrelations,
   fetchInsights,
   type AnalyticsFinding,
   type AnalyticsInsights,
   type BreakdownItem,
-  type CorrelationResult,
-  type CorrelationSummary,
 } from "@/features/analytics/api";
 import { Chart } from "@/shared/ui/Chart";
-import { useTranslation } from "react-i18next";
 import { useAppLocale } from "@/shared/i18n/useAppLocale";
-
-const INDICATORS = [
-  { code: "unemployment_rate", label: "Unemployment rate" },
-  { code: "literacy_rate", label: "Literacy rate" },
-  { code: "population_density", label: "Population density" },
-  { code: "poverty_index", label: "Poverty index" },
-  { code: "urban_pct", label: "Urban %" },
-];
 
 const SEV_COLOR: Record<string, string> = {
   high: "#ff453a",
@@ -33,15 +21,12 @@ const SEV_COLOR: Record<string, string> = {
   low: "#5ac8fa",
 };
 
-export function AnalyticsPanel() {
+/** Insights section for Dashboard — only the two most relevant charts. */
+export function AnalyticsPanel({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation("analytics");
   const locale = useAppLocale();
-  const [indicator, setIndicator] = useState("unemployment_rate");
   const [insights, setInsights] = useState<AnalyticsInsights | null>(null);
   const [offense, setOffense] = useState<BreakdownItem[]>([]);
-  const [severity, setSeverity] = useState<BreakdownItem[]>([]);
-  const [corr, setCorr] = useState<CorrelationResult | null>(null);
-  const [ranked, setRanked] = useState<CorrelationSummary[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -51,19 +36,13 @@ export function AnalyticsPanel() {
       setLoading(true);
       setError(null);
       try {
-        const [ins, byOffense, bySev, correlation, correlations] = await Promise.all([
+        const [ins, byOffense] = await Promise.all([
           fetchInsights(30),
           fetchBreakdown("offense"),
-          fetchBreakdown("severity"),
-          fetchCorrelation(indicator),
-          fetchCorrelations(),
         ]);
         if (!cancelled) {
           setInsights(ins);
           setOffense(byOffense.items);
-          setSeverity(bySev.items);
-          setCorr(correlation);
-          setRanked(correlations);
         }
       } catch (e) {
         if (!cancelled) {
@@ -76,74 +55,13 @@ export function AnalyticsPanel() {
     return () => {
       cancelled = true;
     };
-  }, [indicator, locale, t]);
-
-  const hourOption: EChartsOption = {
-    tooltip: { trigger: "axis" },
-    grid: { left: 40, right: 16, top: 24, bottom: 32 },
-    xAxis: {
-      type: "category",
-      data: (insights?.by_hour ?? []).map((h) => `${String(h.hour).padStart(2, "0")}`),
-      axisLabel: { color: "#9aa8c7", interval: 3 },
-      axisLine: { lineStyle: { color: "#243049" } },
-    },
-    yAxis: {
-      type: "value",
-      minInterval: 1,
-      splitLine: { lineStyle: { color: "#243049" } },
-      axisLabel: { color: "#9aa8c7" },
-    },
-    series: [
-      {
-        type: "bar",
-        data: (insights?.by_hour ?? []).map((h) => {
-          const peak = insights?.peak_hour.hour ?? -1;
-          return {
-            value: h.count,
-            itemStyle: {
-              color: h.hour === peak ? "#ff9500" : "#3d8bfd",
-              borderRadius: [3, 3, 0, 0],
-            },
-          };
-        }),
-      },
-    ],
-  };
-
-  const dowOption: EChartsOption = {
-    tooltip: { trigger: "axis" },
-    grid: { left: 40, right: 16, top: 24, bottom: 28 },
-    xAxis: {
-      type: "category",
-      data: (insights?.by_dow ?? []).map((d) => d.label),
-      axisLabel: { color: "#9aa8c7" },
-      axisLine: { lineStyle: { color: "#243049" } },
-    },
-    yAxis: {
-      type: "value",
-      minInterval: 1,
-      splitLine: { lineStyle: { color: "#243049" } },
-      axisLabel: { color: "#9aa8c7" },
-    },
-    series: [
-      {
-        type: "bar",
-        data: (insights?.by_dow ?? []).map((d) => ({
-          value: d.count,
-          itemStyle: {
-            color: d.dow === 0 || d.dow === 6 ? "#ff9500" : "#1f6feb",
-            borderRadius: [4, 4, 0, 0],
-          },
-        })),
-      },
-    ],
-  };
+  }, [locale, t]);
 
   const compareOption: EChartsOption | null = insights
     ? {
         tooltip: { trigger: "axis" },
         legend: {
-          data: ["Current 30d", "Prior 30d (total)"],
+          data: ["Current 30d", "Prior 30d (avg)"],
           textStyle: { color: "#9aa8c7" },
           top: 0,
         },
@@ -183,7 +101,7 @@ export function AnalyticsPanel() {
             itemStyle: { color: "#3d8bfd" },
           },
           {
-            name: "Prior 30d (total)",
+            name: "Prior 30d (avg)",
             type: "line",
             data: insights.daily.map(() =>
               insights.daily.length
@@ -221,108 +139,20 @@ export function AnalyticsPanel() {
     ],
   };
 
-  const severityOption: EChartsOption = {
-    tooltip: { trigger: "item" },
-    series: [
-      {
-        type: "pie",
-        radius: ["40%", "68%"],
-        label: { color: "#e8eefc" },
-        data: severity.map((s) => ({ name: s.name, value: s.count })),
-        color: ["#5ac8fa", "#ffcc00", "#ff9500", "#ff453a"],
-      },
-    ],
-  };
-
-  const scatterOption: EChartsOption = {
-    tooltip: {
-      trigger: "item",
-      formatter: (params: unknown) => {
-        const p = params as { data?: [number, number, string] };
-        if (!p.data) return "";
-        return `${p.data[2]}<br/>Indicator: ${p.data[0]}<br/>Crime: ${p.data[1]}`;
-      },
-    },
-    grid: { left: 48, right: 24, top: 24, bottom: 40 },
-    xAxis: {
-      name: indicator,
-      nameLocation: "middle",
-      nameGap: 28,
-      nameTextStyle: { color: "#9aa8c7" },
-      splitLine: { lineStyle: { color: "#243049" } },
-      axisLabel: { color: "#9aa8c7" },
-    },
-    yAxis: {
-      name: corr?.crime_metric ?? "crime",
-      nameTextStyle: { color: "#9aa8c7" },
-      splitLine: { lineStyle: { color: "#243049" } },
-      axisLabel: { color: "#9aa8c7" },
-    },
-    series: [
-      {
-        type: "scatter",
-        symbolSize: 14,
-        data: (corr?.points ?? []).map((pt) => [
-          pt.indicator_value,
-          pt.crime_value,
-          pt.district_name,
-        ]),
-        itemStyle: { color: "#3d8bfd" },
-      },
-    ],
-  };
-
-  const rankedOption: EChartsOption = {
-    tooltip: { trigger: "axis" },
-    grid: { left: 130, right: 24, top: 12, bottom: 24 },
-    xAxis: {
-      type: "value",
-      min: 0,
-      max: 1,
-      splitLine: { lineStyle: { color: "#243049" } },
-      axisLabel: { color: "#9aa8c7" },
-    },
-    yAxis: {
-      type: "category",
-      data: ranked.map((r) => r.indicator_code).reverse(),
-      axisLabel: { color: "#9aa8c7" },
-    },
-    series: [
-      {
-        type: "bar",
-        data: ranked.map((r) => r.abs_coefficient ?? 0).reverse(),
-        itemStyle: { color: "#ff9500", borderRadius: [0, 4, 4, 0] },
-      },
-    ],
-  };
-
-  const topCorr = ranked[0];
   const pct = insights?.pct_change ?? 0;
   const deltaUp = pct > 0;
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
-      <header style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "end" }}>
-        <div style={{ flex: 1, minWidth: 260 }}>
+      <header>
+        {embedded ? (
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>{t("sectionTitle")}</h2>
+        ) : (
           <h1 style={{ margin: 0 }}>{t("title")}</h1>
-          <p style={{ margin: "6px 0 0", color: "var(--cl-muted)", fontSize: 14, maxWidth: 560 }}>
-            {t("subtitle")}
-          </p>
-        </div>
-        <label style={{ display: "grid", gap: 4, fontSize: 12, color: "var(--cl-muted)" }}>
-          {t("socioIndicator")}
-          <select
-            value={indicator}
-            onChange={(e) => setIndicator(e.target.value)}
-            style={selectStyle}
-          >
-            {INDICATORS.map((i) => (
-              <option key={i.code} value={i.code}>
-                {t(`indicators.${i.code}`)}
-              </option>
-            ))}
-          </select>
-        </label>
+        )}
+        <p style={{ margin: "6px 0 0", color: "var(--cl-muted)", fontSize: 14, maxWidth: 560 }}>
+          {embedded ? t("sectionSubtitle") : t("subtitle")}
+        </p>
       </header>
 
       {error && (
@@ -339,7 +169,6 @@ export function AnalyticsPanel() {
         </div>
       )}
 
-      {/* Impact KPIs — not duplicated Dashboard counts */}
       <div
         style={{
           display: "grid",
@@ -368,42 +197,19 @@ export function AnalyticsPanel() {
         <Metric
           label="Peak hour"
           value={
-            insights
-              ? `${String(insights.peak_hour.hour).padStart(2, "0")}:00`
-              : "—"
+            insights ? `${String(insights.peak_hour.hour).padStart(2, "0")}:00` : "—"
           }
           hint={insights ? `${insights.peak_hour.count} incidents` : ""}
           accent="#3d8bfd"
         />
         <Metric
           label="Top offense share"
-          value={
-            insights ? `${insights.concentration.top1_share_pct}%` : "—"
-          }
+          value={insights ? `${insights.concentration.top1_share_pct}%` : "—"}
           hint={insights?.concentration.top_offense?.name ?? ""}
           accent="#bf5af2"
         />
-        <Metric
-          label="High/critical"
-          value={
-            insights ? `${insights.severity.high_critical_share_pct}%` : "—"
-          }
-          hint={
-            insights
-              ? `${insights.severity.high_critical_count} incidents`
-              : ""
-          }
-          accent="#ff453a"
-        />
-        <Metric
-          label="Offense mix"
-          value={insights?.concentration.label ?? "—"}
-          hint={insights ? `HHI ${insights.concentration.hhi}` : ""}
-          accent="#5ac8fa"
-        />
       </div>
 
-      {/* Analyst findings */}
       <section style={panelStyle}>
         <div
           style={{
@@ -439,56 +245,28 @@ export function AnalyticsPanel() {
           }}
         >
           <ActionLink href="/advisor">Open Advisor →</ActionLink>
-          <ActionLink href="/explain">Explain model →</ActionLink>
-          <ActionLink href="/story">Story playback →</ActionLink>
           <ActionLink href="/map">Map / hotspots →</ActionLink>
         </div>
       </section>
 
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.4fr) minmax(0, 1fr)", gap: 12 }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 1.4fr) minmax(0, 1fr)",
+          gap: 12,
+        }}
+        className="cl-dash-two-charts"
+      >
         <Panel
-          title="Period impact — current vs prior baseline"
+          title="Period impact — current vs prior"
           subtitle="Spikes marked · dashed line = prior-period daily average"
         >
           {compareOption ? (
-            <Chart option={compareOption} height={280} loading={loading} />
+            <Chart option={compareOption} height={300} loading={loading} />
           ) : (
-            <Chart option={{}} height={280} loading={loading} />
+            <Chart option={{}} height={300} loading={loading} />
           )}
         </Panel>
-        <Panel title="Weekday vs weekend intensity" subtitle="Orange = weekend">
-          <Chart option={dowOption} height={280} loading={loading} />
-          {insights && (
-            <div
-              style={{
-                display: "flex",
-                gap: 16,
-                marginTop: 8,
-                fontSize: 12,
-                color: "var(--cl-muted)",
-              }}
-            >
-              <span>
-                Weekday ~{insights.weekday.per_day}/day
-              </span>
-              <span>
-                Weekend ~{insights.weekend.per_day}/day
-              </span>
-            </div>
-          )}
-        </Panel>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 12 }}>
-        <Panel title="Hour-of-day pattern" subtitle="Peak hour highlighted">
-          <Chart option={hourOption} height={240} loading={loading} />
-        </Panel>
-        <Panel title="Severity mix">
-          <Chart option={severityOption} height={240} loading={loading} />
-        </Panel>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 12 }}>
         <Panel
           title="Offense concentration"
           subtitle={
@@ -497,30 +275,15 @@ export function AnalyticsPanel() {
               : undefined
           }
         >
-          <Chart option={offenseOption} height={280} loading={loading} />
-        </Panel>
-        <Panel
-          title={
-            corr
-              ? `Socio driver · r=${corr.coefficient?.toFixed(3) ?? "n/a"} (${corr.interpretation})`
-              : "Socio-economic scatter"
-          }
-          subtitle="District-level Pearson correlation — not shown on Dashboard"
-        >
-          <Chart option={scatterOption} height={280} loading={loading} />
-          {topCorr && (
-            <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--cl-muted)" }}>
-              Strongest |r| overall: <strong style={{ color: "var(--cl-text)" }}>{topCorr.indicator_code}</strong>{" "}
-              ({topCorr.abs_coefficient?.toFixed(3)}, {topCorr.interpretation}). Use Advisor to turn this into
-              deployment guidance.
-            </p>
-          )}
+          <Chart option={offenseOption} height={300} loading={loading} />
         </Panel>
       </div>
 
-      <Panel title="Ranked |r| across socio-economic indicators">
-        <Chart option={rankedOption} height={240} loading={loading} />
-      </Panel>
+      <style>{`
+        @media (max-width: 900px) {
+          .cl-dash-two-charts { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
     </div>
   );
 }
@@ -632,13 +395,4 @@ const panelStyle: CSSProperties = {
   borderRadius: 12,
   background: "rgba(18, 26, 43, 0.72)",
   padding: "14px 16px",
-};
-
-const selectStyle: CSSProperties = {
-  background: "var(--cl-surface)",
-  color: "var(--cl-text)",
-  border: "1px solid var(--cl-border)",
-  borderRadius: 8,
-  padding: "8px 10px",
-  minWidth: 180,
 };

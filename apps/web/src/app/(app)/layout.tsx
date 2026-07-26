@@ -10,7 +10,6 @@ import { KspLogo } from "@/shared/ui/KspLogo";
 
 const NAV_ITEMS: Array<{ href: string; key: string }> = [
   { href: "/dashboard", key: "nav.dashboard" },
-  { href: "/analytics", key: "nav.analytics" },
   { href: "/map", key: "nav.map" },
   { href: "/prediction", key: "nav.prediction" },
   { href: "/simulation", key: "nav.simulation" },

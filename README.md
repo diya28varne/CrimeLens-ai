@@ -35,7 +35,7 @@ CrimeLens AI is a modular monorepo that delivers:
 
 | Layer | Role |
 |-------|------|
-| **Web console** | Command overview, deep analytics, map intelligence, prediction, network analysis, and five flagship AI workflows |
+| **Web console** | Command overview & analytics, map intelligence, prediction, network analysis, and five flagship AI workflows |
 | **REST API** | Authenticated FastAPI service with RBAC, jurisdiction scoping, incident/analytics/prediction/network modules |
 | **Data platform** | PostgreSQL + PostGIS for spatial crime data; Redis for sessions/cache |
 | **Domain library** | Shared Python domain models, permissions, and identity contracts |
@@ -48,8 +48,7 @@ CrimeLens AI is a modular monorepo that delivers:
 
 ### Operational intelligence
 
-- **Dashboard** — Live KPIs, severity mix, and alerts for at-a-glance command awareness
-- **Analytics** — Period-over-period impact, spike detection, hour/day patterns, offense concentration, and socio-economic Pearson correlations
+- **Dashboard** — Live KPIs, alerts, period impact, spike detection, hour/day patterns, offense concentration, and socio-economic correlations
 - **Geospatial map** — Interactive MapLibre + deck.gl visualization with district drill-down
 - **Prediction** — Risk scoring surfaces for forward-looking deployment planning
 - **Network analysis** — Link analysis and repeat-offender oriented exploration
@@ -78,8 +77,7 @@ CrimeLens AI is a modular monorepo that delivers:
 
 | Route | Description |
 |-------|-------------|
-| `/dashboard` | Ops overview — KPIs and alerts |
-| `/analytics` | Deep analysis — impact, patterns, socio drivers |
+| `/dashboard` | Ops overview + analytics (KPIs, alerts, impact, patterns, socio drivers) |
 | `/map` | Geospatial intelligence |
 | `/prediction` | Predictive risk views |
 | `/simulation` | Digital twin simulator |

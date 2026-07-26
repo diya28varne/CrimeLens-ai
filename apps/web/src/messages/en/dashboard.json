@@ -1,7 +1,6 @@
 {
   "title": "Dashboard",
-  "subtitle": "Ops at a glance — live KPIs and alerts. For period impact, spikes, and socio drivers use Analytics.",
-  "linkAnalytics": "Analytics",
+  "subtitle": "Ops overview, alerts, period impact, patterns, and socio drivers — open",
   "linkMap": "Map",
   "kpi": {
     "totalIncidents": "Total incidents",

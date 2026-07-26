@@ -1,7 +1,6 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { AnalyticsPanel } from "@/features/analytics";
-
+/** Analytics is merged into Dashboard — keep old URLs working. */
 export default function AnalyticsPage() {
-  return <AnalyticsPanel />;
+  redirect("/dashboard");
 }

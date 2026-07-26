@@ -1,6 +1,8 @@
 {
   "title": "Analytics",
-  "subtitle": "Deep analysis — period impact, temporal patterns, offense concentration, and socio-economic drivers. Dashboard is for ops glance; this page answers why and where to act.",
+  "sectionTitle": "Insights & analysis",
+  "sectionSubtitle": "Period impact, temporal patterns, offense concentration, and socio-economic drivers.",
+  "subtitle": "Deep analysis — period impact, temporal patterns, offense concentration, and socio-economic drivers.",
   "socioIndicator": "Socio indicator",
   "indicators": {
     "unemployment_rate": "Unemployment rate",
