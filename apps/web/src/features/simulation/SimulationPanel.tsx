@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 import {
   DEFAULT_CONTROLS,
@@ -12,8 +13,12 @@ import {
 } from "@/features/simulation/api";
 import { SimulationMap } from "@/features/simulation/SimulationMap";
 import { ApiError } from "@/shared/api/client";
+import { useAppLocale } from "@/shared/i18n/useAppLocale";
 
 export function SimulationPanel() {
+  const { t } = useTranslation("ai");
+  const { t: tc } = useTranslation("common");
+  const locale = useAppLocale();
   const [presets, setPresets] = useState<ScenarioPreset[]>([]);
   const [controls, setControls] = useState<ScenarioControls>(DEFAULT_CONTROLS);
   const [activePreset, setActivePreset] = useState<string | null>(null);
@@ -32,10 +37,10 @@ export function SimulationPanel() {
         if (!cancelled) {
           setError(
             e instanceof ApiError && e.status === 401
-              ? "Sign in required — open /login with seeded admin credentials."
+              ? tc("signInRequired")
               : e instanceof Error
                 ? e.message
-                : "Failed to load scenarios",
+                : t("simulation.errorScenarios"),
           );
         }
       }
@@ -43,36 +48,38 @@ export function SimulationPanel() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [locale, t, tc]);
 
-  const execute = useCallback(async (next: ScenarioControls, presetId: string | null) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await runSimulation({
-        preset_id: presetId,
-        controls: next,
-      });
-      setResult(res.data);
-    } catch (e) {
-      setError(
-        e instanceof ApiError && e.status === 401
-          ? "Sign in required — open /login with seeded admin credentials."
-          : e instanceof Error
-            ? e.message
-            : "Simulation failed",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const execute = useCallback(
+    async (next: ScenarioControls, presetId: string | null) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await runSimulation({
+          preset_id: presetId,
+          controls: next,
+        });
+        setResult(res.data);
+      } catch (e) {
+        setError(
+          e instanceof ApiError && e.status === 401
+            ? tc("signInRequired")
+            : e instanceof Error
+              ? e.message
+              : t("simulation.errorLoad"),
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    [t, tc],
+  );
 
-  // Initial + debounced re-run when controls change
   useEffect(() => {
-    const t = window.setTimeout(() => {
+    const timer = window.setTimeout(() => {
       void execute(controls, activePreset);
     }, 400);
-    return () => window.clearTimeout(t);
+    return () => window.clearTimeout(timer);
   }, [controls, activePreset, execute]);
 
   function loadPreset(preset: ScenarioPreset) {
@@ -81,20 +88,20 @@ export function SimulationPanel() {
   }
 
   function patchControl<K extends keyof ScenarioControls>(key: K, value: ScenarioControls[K]) {
-    setActivePreset((prev) => prev); // keep preset id; API labels as modified when changed
+    setActivePreset((prev) => prev);
     setControls((c) => ({ ...c, [key]: value }));
   }
 
   const briefing = result?.briefing;
+  const patrolSigned = `${controls.patrol_delta_pct > 0 ? "+" : ""}${controls.patrol_delta_pct}`;
+  const cctvSigned = `${controls.cctv_delta_pct > 0 ? "+" : ""}${controls.cctv_delta_pct}`;
 
   return (
     <div style={{ display: "grid", gap: 12, height: "calc(100vh - 3rem)", minHeight: 640 }}>
       <header style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 22 }}>Decision Simulation Center</h1>
-          <p style={{ margin: "4px 0 0", color: "var(--cl-muted)", fontSize: 13 }}>
-            Digital Twin — test operational what-ifs before you deploy.
-          </p>
+          <h1 style={{ margin: 0, fontSize: 22 }}>{t("simulation.title")}</h1>
+          <p style={{ margin: "4px 0 0", color: "var(--cl-muted)", fontSize: 13 }}>{t("simulation.subtitle")}</p>
         </div>
         <div
           style={{
@@ -108,14 +115,11 @@ export function SimulationPanel() {
             maxWidth: 420,
           }}
         >
-          {result?.disclaimer ??
-            "Estimates from a decision model — not guarantees. Use for planning support only."}
+          {result?.disclaimer ?? t("simulation.disclaimerFallback")}
         </div>
       </header>
 
-      {error ? (
-        <div style={{ color: "#ff8e8e", fontSize: 13 }}>{error}</div>
-      ) : null}
+      {error ? <div style={{ color: "#ff8e8e", fontSize: 13 }}>{error}</div> : null}
 
       <div
         style={{
@@ -127,10 +131,9 @@ export function SimulationPanel() {
           flex: 1,
         }}
       >
-        {/* Left — Scenario Builder */}
-        <Panel title="Scenario Builder" style={{ gridRow: "1 / 2", overflow: "auto" }}>
+        <Panel title={t("simulation.scenarioBuilder")} style={{ gridRow: "1 / 2", overflow: "auto" }}>
           <div style={{ marginBottom: 12 }}>
-            <div style={sectionLabel}>Scenario Library</div>
+            <div style={sectionLabel}>{t("simulation.scenarioLibrary")}</div>
             <div style={{ display: "grid", gap: 6 }}>
               {presets.map((p) => {
                 const active = activePreset === p.id;
@@ -157,16 +160,16 @@ export function SimulationPanel() {
             </div>
           </div>
 
-          <div style={sectionLabel}>Levers</div>
+          <div style={sectionLabel}>{t("simulation.levers")}</div>
           <Slider
-            label={`Patrol units (${controls.patrol_delta_pct > 0 ? "+" : ""}${controls.patrol_delta_pct}%)`}
+            label={t("simulation.patrolUnits", { signed: patrolSigned })}
             value={controls.patrol_delta_pct}
             min={-50}
             max={50}
             onChange={(v) => patchControl("patrol_delta_pct", v)}
           />
           <Slider
-            label={`CCTV coverage (${controls.cctv_delta_pct > 0 ? "+" : ""}${controls.cctv_delta_pct}%)`}
+            label={t("simulation.cctvCoverage", { signed: cctvSigned })}
             value={controls.cctv_delta_pct}
             min={-50}
             max={50}
@@ -174,71 +177,72 @@ export function SimulationPanel() {
           />
 
           <label style={fieldStyle}>
-            <span>Time of day</span>
+            <span>{t("simulation.timeOfDay")}</span>
             <select
               value={controls.time_of_day}
               onChange={(e) => patchControl("time_of_day", e.target.value as ScenarioControls["time_of_day"])}
               style={inputStyle}
             >
-              <option value="morning">Morning</option>
-              <option value="afternoon">Afternoon</option>
-              <option value="evening">Evening</option>
-              <option value="night">Night</option>
+              <option value="morning">{t("simulation.morning")}</option>
+              <option value="afternoon">{t("simulation.afternoon")}</option>
+              <option value="evening">{t("simulation.evening")}</option>
+              <option value="night">{t("simulation.night")}</option>
             </select>
           </label>
 
           <label style={fieldStyle}>
-            <span>Day type</span>
+            <span>{t("simulation.dayType")}</span>
             <select
               value={controls.day_type}
               onChange={(e) => patchControl("day_type", e.target.value as ScenarioControls["day_type"])}
               style={inputStyle}
             >
-              <option value="weekday">Weekday</option>
-              <option value="weekend">Weekend</option>
-              <option value="holiday">Holiday</option>
+              <option value="weekday">{t("simulation.weekday")}</option>
+              <option value="weekend">{t("simulation.weekend")}</option>
+              <option value="holiday">{t("simulation.holiday")}</option>
             </select>
           </label>
 
           <label style={fieldStyle}>
-            <span>Focus zone</span>
+            <span>{t("simulation.focusZone")}</span>
             <select
               value={controls.event_zone}
               onChange={(e) => patchControl("event_zone", e.target.value as ScenarioControls["event_zone"])}
               style={inputStyle}
             >
-              <option value="central">Central Business District</option>
-              <option value="metro_corridor_a">Metro Corridor A</option>
-              <option value="east">East Bengaluru</option>
-              <option value="west">West Bengaluru</option>
-              <option value="north">North Bengaluru</option>
-              <option value="south">South Bengaluru</option>
+              <option value="central">{t("simulation.zoneCentral")}</option>
+              <option value="metro_corridor_a">{t("simulation.zoneMetro")}</option>
+              <option value="east">{t("simulation.zoneEast")}</option>
+              <option value="west">{t("simulation.zoneWest")}</option>
+              <option value="north">{t("simulation.zoneNorth")}</option>
+              <option value="south">{t("simulation.zoneSouth")}</option>
             </select>
           </label>
 
           <Toggle
-            label="Public event / disruption"
+            label={t("simulation.publicEvent")}
             checked={controls.public_event}
             onChange={(v) => patchControl("public_event", v)}
           />
           <Toggle
-            label="Heavy rainfall stress"
+            label={t("simulation.weatherStress")}
             checked={controls.weather_stress}
             onChange={(v) => patchControl("weather_stress", v)}
           />
         </Panel>
 
-        {/* Center — Map */}
         <Panel
           title={
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-              <span>City risk map {loading ? "· updating…" : ""}</span>
+              <span>
+                {t("simulation.cityRiskMap")} {loading ? t("simulation.updating") : ""}
+              </span>
               <div style={{ display: "flex", gap: 6 }}>
                 <ModeChip active={mapMode === "delta"} onClick={() => setMapMode("delta")}>
-                  Delta
+                  {t("simulation.modeDelta")}
                 </ModeChip>
                 <ModeChip active={mapMode === "simulated"} onClick={() => setMapMode("simulated")}>
-                  Simulated
+                  {t("simulation.modeSimulated")}
                 </ModeChip>
               </div>
             </div>
@@ -253,39 +257,36 @@ export function SimulationPanel() {
           />
         </Panel>
 
-        {/* Right — Briefing */}
-        <Panel title="AI prediction summary" style={{ gridRow: "1 / 2", overflow: "auto" }}>
-          <div style={sectionLabel}>Current scenario</div>
+        <Panel title={t("simulation.briefingTitle")} style={{ gridRow: "1 / 2", overflow: "auto" }}>
+          <div style={sectionLabel}>{t("simulation.currentScenario")}</div>
           <div style={{ fontWeight: 600, marginBottom: 4 }}>{briefing?.scenario_label ?? "—"}</div>
           <div style={{ fontSize: 13, color: "var(--cl-muted)", marginBottom: 12 }}>
-            City risk band: <strong style={{ color: "var(--cl-text)" }}>{briefing?.current_risk_band ?? "—"}</strong>
+            {t("simulation.cityRiskBand")}{" "}
+            <strong style={{ color: "var(--cl-text)" }}>{briefing?.current_risk_band ?? "—"}</strong>
           </div>
 
-          <div style={sectionLabel}>Predicted change</div>
+          <div style={sectionLabel}>{t("simulation.predictedChange")}</div>
           <ul style={listStyle}>
-            {(briefing?.predicted_changes ?? ["Run a scenario to see projected shifts."]).map((line) => (
+            {(briefing?.predicted_changes ?? [t("simulation.runPrompt")]).map((line) => (
               <li key={line}>{line}</li>
             ))}
           </ul>
 
-          <div style={sectionLabel}>Suggested actions</div>
+          <div style={sectionLabel}>{t("simulation.suggestedActions")}</div>
           <ul style={listStyle}>
             {(briefing?.suggested_actions ?? []).map((line) => (
               <li key={line}>{line}</li>
             ))}
           </ul>
 
-          <div style={sectionLabel}>Confidence</div>
+          <div style={sectionLabel}>{t("simulation.confidence")}</div>
           <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: "-0.02em" }}>
             {briefing ? `${Math.round(briefing.confidence * 100)}%` : "—"}
           </div>
-          <p style={{ fontSize: 11, color: "var(--cl-muted)", marginTop: 8 }}>
-            Intelligence briefing style — grounded in current prediction / hotspot runs plus scenario levers.
-          </p>
+          <p style={{ fontSize: 11, color: "var(--cl-muted)", marginTop: 8 }}>{t("simulation.briefingHint")}</p>
         </Panel>
 
-        {/* Bottom — Comparison */}
-        <Panel title="Current vs simulated" style={{ gridColumn: "1 / -1" }}>
+        <Panel title={t("simulation.comparisonTitle")} style={{ gridColumn: "1 / -1" }}>
           <div
             style={{
               display: "grid",
@@ -296,11 +297,7 @@ export function SimulationPanel() {
             {(result?.comparison ?? []).map((m) => {
               const diff = m.simulated - m.baseline;
               const good =
-                m.higher_is_better == null
-                  ? null
-                  : m.higher_is_better
-                    ? diff > 0
-                    : diff < 0;
+                m.higher_is_better == null ? null : m.higher_is_better ? diff > 0 : diff < 0;
               return (
                 <div
                   key={m.key}
@@ -314,12 +311,10 @@ export function SimulationPanel() {
                   <div style={{ fontSize: 11, color: "var(--cl-muted)", marginBottom: 6 }}>{m.label}</div>
                   <div style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 13 }}>
                     <span>
-                      Now{" "}
-                      <strong>{formatMetric(m.baseline, m.unit)}</strong>
+                      {t("simulation.now")} <strong>{formatMetric(m.baseline, m.unit)}</strong>
                     </span>
                     <span>
-                      Sim{" "}
-                      <strong>{formatMetric(m.simulated, m.unit)}</strong>
+                      {t("simulation.sim")} <strong>{formatMetric(m.simulated, m.unit)}</strong>
                     </span>
                   </div>
                   <div
@@ -336,7 +331,7 @@ export function SimulationPanel() {
               );
             })}
             {!result ? (
-              <div style={{ color: "var(--cl-muted)", fontSize: 13 }}>Comparison metrics appear after the first run.</div>
+              <div style={{ color: "var(--cl-muted)", fontSize: 13 }}>{t("simulation.comparisonEmpty")}</div>
             ) : null}
           </div>
         </Panel>

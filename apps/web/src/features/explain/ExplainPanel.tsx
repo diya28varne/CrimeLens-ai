@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import type { EChartsOption } from "echarts";
+import { useTranslation } from "react-i18next";
 
 import { fetchCurrentPredictions, type PredictionValue } from "@/features/prediction/api";
 import {
@@ -13,6 +14,7 @@ import {
 } from "@/features/explain/api";
 import { Chart } from "@/shared/ui/Chart";
 import { ApiError } from "@/shared/api/client";
+import { useAppLocale } from "@/shared/i18n/useAppLocale";
 
 type Props = {
   initialValueId?: string | null;
@@ -21,6 +23,9 @@ type Props = {
 };
 
 export function ExplainPanel({ initialValueId = null, storyHref = "/explain?view=story" }: Props) {
+  const { t } = useTranslation("ai");
+  const { t: tc } = useTranslation("common");
+  const locale = useAppLocale();
   const [values, setValues] = useState<PredictionValue[]>([]);
   const [selected, setSelected] = useState<string | null>(initialValueId);
   const [card, setCard] = useState<DecisionCard | null>(null);
@@ -37,18 +42,19 @@ export function ExplainPanel({ initialValueId = null, storyHref = "/explain?view
         const pred = await fetchCurrentPredictions();
         if (cancelled) return;
         setValues(pred.data.values);
-        const first = initialValueId && pred.data.values.some((v) => v.id === initialValueId)
-          ? initialValueId
-          : pred.data.values[0]?.id ?? null;
+        const first =
+          initialValueId && pred.data.values.some((v) => v.id === initialValueId)
+            ? initialValueId
+            : (pred.data.values[0]?.id ?? null);
         setSelected(first);
       } catch (e) {
         if (!cancelled) {
           setError(
             e instanceof ApiError && e.status === 401
-              ? "Sign in required — open /login with seeded admin credentials."
+              ? tc("signInRequired")
               : e instanceof Error
                 ? e.message
-                : "Failed to load predictions",
+                : t("prediction.errorLoad"),
           );
         }
       } finally {
@@ -58,21 +64,24 @@ export function ExplainPanel({ initialValueId = null, storyHref = "/explain?view
     return () => {
       cancelled = true;
     };
-  }, [initialValueId]);
+  }, [initialValueId, locale, t, tc]);
 
-  const loadCard = useCallback(async (valueId: string) => {
-    setError(null);
-    try {
-      const [res, aud] = await Promise.all([fetchDecisionCard(valueId), fetchAuditTrail()]);
-      setCard(res.data);
-      setAudit(aud.data);
-      setActiveScenario("current");
-      setShowEvidence(false);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load decision card");
-      setCard(null);
-    }
-  }, []);
+  const loadCard = useCallback(
+    async (valueId: string) => {
+      setError(null);
+      try {
+        const [res, aud] = await Promise.all([fetchDecisionCard(valueId), fetchAuditTrail()]);
+        setCard(res.data);
+        setAudit(aud.data);
+        setActiveScenario("current");
+        setShowEvidence(false);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : t("explain.errorCard"));
+        setCard(null);
+      }
+    },
+    [t],
+  );
 
   useEffect(() => {
     if (selected) void loadCard(selected);
@@ -111,36 +120,32 @@ export function ExplainPanel({ initialValueId = null, storyHref = "/explain?view
     <div style={{ display: "grid", gap: 14, maxWidth: 1100 }}>
       <header style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 22 }}>Explainable AI Decision Engine</h1>
+          <h1 style={{ margin: 0, fontSize: 22 }}>{t("explain.title")}</h1>
           <p style={{ margin: "4px 0 0", color: "var(--cl-muted)", fontSize: 13 }}>
-            Don’t just predict — prove it. Decision cards with factors, evidence, and audit trail.
-            Open Story to replay how patterns evolved over time.
+            {t("explain.subtitle")}
           </p>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
           <Link href={storyHref} style={storyLinkBtn}>
-            Open Story playback →
+            {t("explain.openStory")}
           </Link>
           <Link href="/prediction" style={linkBtn}>
-            Back to Prediction
+            {t("explain.backPrediction")}
           </Link>
         </div>
       </header>
 
-      <div style={disclaimerStyle}>
-        {card?.disclaimer ??
-          "Factors are model estimates — not proof of causation. Humans retain operational authority."}
-      </div>
+      <div style={disclaimerStyle}>{card?.disclaimer ?? t("explain.disclaimer")}</div>
 
       {error ? <div style={{ color: "#ff8e8e", fontSize: 13 }}>{error}</div> : null}
 
       <div style={{ display: "grid", gridTemplateColumns: "220px minmax(0,1fr)", gap: 12 }}>
         <aside style={panelStyle}>
-          <div style={sectionTitle}>Select prediction</div>
-          {loading ? <div style={{ color: "var(--cl-muted)", fontSize: 13 }}>Loading…</div> : null}
+          <div style={sectionTitle}>{t("explain.selectPrediction")}</div>
+          {loading ? <div style={{ color: "var(--cl-muted)", fontSize: 13 }}>{tc("loading")}</div> : null}
           <div style={{ display: "grid", gap: 6 }}>
             {values.map((v) => {
-              const name = String(v.properties.station_name ?? "Station");
+              const name = String(v.properties.station_name ?? tc("station"));
               const on = selected === v.id;
               return (
                 <button
@@ -170,23 +175,26 @@ export function ExplainPanel({ initialValueId = null, storyHref = "/explain?view
             <>
               <section style={panelStyle}>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
-                  <div style={sectionTitle}>AI Decision Summary</div>
+                  <div style={sectionTitle}>{t("explain.decisionSummary")}</div>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    <BandPill label={card.risk_band} />
+                    <BandPill label={card.risk_band} riskLabel={t("explain.riskLabel", { label: card.risk_band })} />
                     <ConfPill band={card.confidence_band} value={card.confidence} />
                   </div>
                 </div>
                 <h2 style={{ margin: "0 0 8px", fontSize: 18 }}>{card.scope_name}</h2>
                 <p style={{ margin: 0, lineHeight: 1.55, fontSize: 14 }}>{card.summary}</p>
                 <div style={{ marginTop: 10, fontSize: 12, color: "var(--cl-muted)" }}>
-                  Score {(card.risk_score * 100).toFixed(0)}% · model {card.model_version} · audit{" "}
-                  {card.audit_id.slice(0, 8)}…
+                  {t("explain.metaLine", {
+                    score: (card.risk_score * 100).toFixed(0),
+                    model: card.model_version,
+                    audit: card.audit_id.slice(0, 8),
+                  })}
                 </div>
               </section>
 
               <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.1fr) minmax(0,0.9fr)", gap: 12 }}>
                 <section style={panelStyle}>
-                  <div style={sectionTitle}>Why did the AI predict this?</div>
+                  <div style={sectionTitle}>{t("explain.whyPredict")}</div>
                   <Chart option={factorOption} height={240} />
                   <div style={{ display: "grid", gap: 6, marginTop: 8 }}>
                     {card.factors.map((f) => (
@@ -199,12 +207,12 @@ export function ExplainPanel({ initialValueId = null, storyHref = "/explain?view
                 </section>
 
                 <section style={panelStyle}>
-                  <div style={sectionTitle}>Confidence meter</div>
+                  <div style={sectionTitle}>{t("explain.confidenceMeter")}</div>
                   <div style={{ fontSize: 36, fontWeight: 700 }}>{Math.round(card.confidence * 100)}%</div>
                   <div style={{ color: "var(--cl-muted)", fontSize: 13, marginBottom: 12 }}>
-                    {card.confidence_band} confidence
+                    {t("explain.confidenceBand", { band: card.confidence_band })}
                   </div>
-                  <div style={sectionTitle}>Recommendation</div>
+                  <div style={sectionTitle}>{t("explain.recommendation")}</div>
                   {card.recommendation ? (
                     <>
                       <div style={{ fontWeight: 600, marginBottom: 6 }}>{card.recommendation.title}</div>
@@ -214,21 +222,23 @@ export function ExplainPanel({ initialValueId = null, storyHref = "/explain?view
                         ))}
                       </ul>
                       <div style={{ fontSize: 12, color: "var(--cl-muted)" }}>
-                        Expected risk reduction ~{card.recommendation.expected_risk_reduction_pct}% ·{" "}
-                        {Math.round(card.recommendation.confidence * 100)}% confidence
+                        {t("explain.expectedReduction", {
+                          pct: card.recommendation.expected_risk_reduction_pct,
+                          conf: Math.round(card.recommendation.confidence * 100),
+                        })}
                       </div>
                     </>
                   ) : (
-                    <div style={{ color: "var(--cl-muted)", fontSize: 13 }}>No recommendation attached.</div>
+                    <div style={{ color: "var(--cl-muted)", fontSize: 13 }}>{t("explain.noRecommendation")}</div>
                   )}
                 </section>
               </div>
 
               <section style={panelStyle}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div style={sectionTitle}>Evidence Explorer</div>
+                  <div style={sectionTitle}>{t("explain.evidenceExplorer")}</div>
                   <button type="button" style={ghostBtn} onClick={() => setShowEvidence((v) => !v)}>
-                    {showEvidence ? "Hide evidence" : "View evidence"}
+                    {showEvidence ? tc("hideEvidence") : tc("viewEvidence")}
                   </button>
                 </div>
                 {showEvidence ? (
@@ -241,7 +251,7 @@ export function ExplainPanel({ initialValueId = null, storyHref = "/explain?view
                           <div style={{ fontSize: 12, color: "var(--cl-muted)" }}>{e.detail}</div>
                           {e.href ? (
                             <Link href={e.href} style={{ color: "var(--cl-accent)", fontSize: 12 }}>
-                              Open
+                              {tc("open")}
                             </Link>
                           ) : null}
                         </div>
@@ -249,14 +259,12 @@ export function ExplainPanel({ initialValueId = null, storyHref = "/explain?view
                     ))}
                   </ul>
                 ) : (
-                  <p style={{ margin: 0, fontSize: 13, color: "var(--cl-muted)" }}>
-                    Supporting evidence is traceable to analytics, hotspots, and the model run.
-                  </p>
+                  <p style={{ margin: 0, fontSize: 13, color: "var(--cl-muted)" }}>{t("explain.evidenceHint")}</p>
                 )}
               </section>
 
               <section style={panelStyle}>
-                <div style={sectionTitle}>Alternative scenarios (what-if)</div>
+                <div style={sectionTitle}>{t("explain.scenarios")}</div>
                 <div
                   style={{
                     display: "grid",
@@ -267,6 +275,7 @@ export function ExplainPanel({ initialValueId = null, storyHref = "/explain?view
                 >
                   {card.scenarios.map((s) => {
                     const on = activeScenario === s.id;
+                    const delta = `${s.delta_pct >= 0 ? "+" : ""}${s.delta_pct}`;
                     return (
                       <button
                         key={s.id}
@@ -285,8 +294,7 @@ export function ExplainPanel({ initialValueId = null, storyHref = "/explain?view
                         <div style={{ fontSize: 12, color: "var(--cl-muted)" }}>{s.label}</div>
                         <div style={{ fontSize: 20, fontWeight: 700 }}>{(s.risk_score * 100).toFixed(0)}%</div>
                         <div style={{ fontSize: 11, color: s.delta_pct <= 0 ? "#1abc9c" : "#e67e22" }}>
-                          {s.delta_pct >= 0 ? "+" : ""}
-                          {s.delta_pct}% vs current
+                          {t("explain.vsCurrent", { delta })}
                         </div>
                       </button>
                     );
@@ -296,7 +304,7 @@ export function ExplainPanel({ initialValueId = null, storyHref = "/explain?view
                   <p style={{ margin: 0, fontSize: 13, lineHeight: 1.45 }}>
                     <strong>{active.label}:</strong> {active.why}{" "}
                     <Link href="/simulation" style={{ color: "var(--cl-accent)" }}>
-                      Open full Simulator →
+                      {t("explain.openSimulator")}
                     </Link>
                   </p>
                 ) : null}
@@ -304,21 +312,21 @@ export function ExplainPanel({ initialValueId = null, storyHref = "/explain?view
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <section style={panelStyle}>
-                  <div style={sectionTitle}>Explainability timeline</div>
+                  <div style={sectionTitle}>{t("explain.timeline")}</div>
                   <div style={{ display: "grid", gap: 6 }}>
-                    {card.timeline.map((t) => (
-                      <div key={t.day_label} style={timelineRow}>
-                        <strong style={{ width: 36 }}>{t.day_label}</strong>
+                    {card.timeline.map((row) => (
+                      <div key={row.day_label} style={timelineRow}>
+                        <strong style={{ width: 36 }}>{row.day_label}</strong>
                         <div>
-                          <div style={{ fontSize: 13 }}>{t.dominant_factor}</div>
-                          <div style={{ fontSize: 11, color: "var(--cl-muted)" }}>{t.note}</div>
+                          <div style={{ fontSize: 13 }}>{row.dominant_factor}</div>
+                          <div style={{ fontSize: 11, color: "var(--cl-muted)" }}>{row.note}</div>
                         </div>
                       </div>
                     ))}
                   </div>
                 </section>
                 <section style={panelStyle}>
-                  <div style={sectionTitle}>Similar historical cases</div>
+                  <div style={sectionTitle}>{t("explain.similarCases")}</div>
                   <div style={{ display: "grid", gap: 8 }}>
                     {card.similar_cases.map((c) => (
                       <div key={c.title} style={evidenceRow}>
@@ -336,10 +344,8 @@ export function ExplainPanel({ initialValueId = null, storyHref = "/explain?view
               </div>
 
               <section style={panelStyle}>
-                <div style={sectionTitle}>AI Decision Audit Trail</div>
-                <p style={{ margin: "0 0 10px", fontSize: 12, color: "var(--cl-muted)" }}>
-                  What was predicted, why, evidence, confidence — and demo outcome status when available.
-                </p>
+                <div style={sectionTitle}>{t("explain.auditTitle")}</div>
+                <p style={{ margin: "0 0 10px", fontSize: 12, color: "var(--cl-muted)" }}>{t("explain.auditHint")}</p>
                 <div style={{ display: "grid", gap: 8 }}>
                   {audit.map((a) => (
                     <div key={a.id} style={evidenceRow}>
@@ -351,11 +357,14 @@ export function ExplainPanel({ initialValueId = null, storyHref = "/explain?view
                           </span>
                         </div>
                         <div style={{ fontSize: 12, marginTop: 4 }}>
-                          {(a.risk_score * 100).toFixed(0)}% {a.risk_band} · confidence{" "}
-                          {Math.round(a.confidence * 100)}%
+                          {t("explain.auditMeta", {
+                            score: (a.risk_score * 100).toFixed(0),
+                            band: a.risk_band,
+                            conf: Math.round(a.confidence * 100),
+                          })}
                         </div>
                         <div style={{ fontSize: 12, color: "var(--cl-muted)", marginTop: 4 }}>
-                          Factors: {a.top_factors.join(" · ")}
+                          {t("explain.factorsLine", { factors: a.top_factors.join(" · ") })}
                         </div>
                         {a.outcome_note ? (
                           <div style={{ fontSize: 11, color: "#f0c674", marginTop: 4 }}>{a.outcome_note}</div>
@@ -367,7 +376,7 @@ export function ExplainPanel({ initialValueId = null, storyHref = "/explain?view
               </section>
             </>
           ) : (
-            !loading && <div style={{ color: "var(--cl-muted)" }}>Select a prediction to open its Decision Card.</div>
+            !loading && <div style={{ color: "var(--cl-muted)" }}>{t("explain.emptySelect")}</div>
           )}
         </div>
       </div>
@@ -375,12 +384,12 @@ export function ExplainPanel({ initialValueId = null, storyHref = "/explain?view
   );
 }
 
-function BandPill({ label }: { label: string }) {
+function BandPill({ label, riskLabel }: { label: string; riskLabel: string }) {
   const color =
     label === "High" ? "#e74c3c" : label === "Medium" ? "#e67e22" : label === "Elevated-low" ? "#f1c40f" : "#3498db";
   return (
     <span style={{ fontSize: 11, padding: "4px 8px", borderRadius: 6, border: `1px solid ${color}`, color }}>
-      Risk: {label}
+      {riskLabel}
     </span>
   );
 }

@@ -30,6 +30,7 @@ const CrimeMapViewport = dynamic(
 
 export function CrimeMapPanel() {
   const { t } = useTranslation("ai");
+  const { t: tc } = useTranslation("common");
   const [layerMode, setLayerMode] = useState<MapLayerMode>("both");
   const [severity, setSeverity] = useState<SeverityFilter>("all");
 
@@ -49,7 +50,9 @@ export function CrimeMapPanel() {
             onChange={(e) => setLayerMode(e.target.value as MapLayerMode)}
             style={selectStyle}
           >
-            <option value="both">{t("map.points")} + {t("map.heatmap")}</option>
+            <option value="both">
+              {t("map.points")} + {t("map.heatmap")}
+            </option>
             <option value="points">{t("map.points")}</option>
             <option value="heatmap">{t("map.heatmap")}</option>
           </select>
@@ -61,11 +64,11 @@ export function CrimeMapPanel() {
             onChange={(e) => setSeverity(e.target.value as SeverityFilter)}
             style={selectStyle}
           >
-            <option value="all">All</option>
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-            <option value="critical">Critical</option>
+            <option value="all">{tc("severity.all")}</option>
+            <option value="low">{tc("severity.low")}</option>
+            <option value="medium">{tc("severity.medium")}</option>
+            <option value="high">{tc("severity.high")}</option>
+            <option value="critical">{tc("severity.critical")}</option>
           </select>
         </label>
       </header>
@@ -75,10 +78,10 @@ export function CrimeMapPanel() {
       </div>
 
       <footer style={{ display: "flex", gap: 14, flexWrap: "wrap", fontSize: 12, color: "var(--cl-muted)" }}>
-        <LegendSwatch color="rgb(30, 136, 229)" label={t("map.legend") + ": Low"} />
-        <LegendSwatch color="rgb(255, 193, 7)" label="Medium" />
-        <LegendSwatch color="rgb(255, 111, 0)" label="High" />
-        <LegendSwatch color="rgb(229, 57, 53)" label="Critical" />
+        <LegendSwatch color="rgb(30, 136, 229)" label={t("map.legendLow")} />
+        <LegendSwatch color="rgb(255, 193, 7)" label={t("map.legendMedium")} />
+        <LegendSwatch color="rgb(255, 111, 0)" label={t("map.legendHigh")} />
+        <LegendSwatch color="rgb(229, 57, 53)" label={t("map.legendCritical")} />
       </footer>
     </div>
   );

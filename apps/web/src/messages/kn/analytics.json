@@ -18,7 +18,9 @@
     "peakHour": "ಉನ್ನತ ಗಂಟೆ",
     "topOffenseShare": "ಪ್ರಮುಖ ಅಪರಾಧ ಪಾಲು",
     "highCritical": "ಅಧಿಕ/ಗಂಭೀರ",
-    "offenseMix": "ಅಪರಾಧ ಮಿಶ್ರಣ"
+    "offenseMix": "ಅಪರಾಧ ಮಿಶ್ರಣ",
+    "nowPrior": "{{current}} ಈಗ · {{prior}} ಹಿಂದೆ",
+    "incidentsCount": "{{count}} ಘಟನೆಗಳು"
   },
   "findings": {
     "title": "ವಿಶ್ಲೇಷಕ ಅನ್ವೇಷಣೆಗಳು",
@@ -33,9 +35,12 @@
   },
   "charts": {
     "periodImpact": "ಅವಧಿ ಪರಿಣಾಮ — ಪ್ರಸ್ತುತ vs ಹಿಂದಿನ ಆಧಾರರೇಖೆ",
+    "periodImpactShort": "ಅವಧಿ ಪರಿಣಾಮ — ಪ್ರಸ್ತುತ vs ಹಿಂದಿನ",
     "periodHint": "ಸ್ಪೈಕ್‌ಗಳು ಗುರುತಿಸಲಾಗಿದೆ · ಡ್ಯಾಶ್ ರೇಖೆ = ಹಿಂದಿನ ಅವಧಿ ದೈನಂದಿನ ಸರಾಸರಿ",
     "current30d": "ಪ್ರಸ್ತುತ 30 ದಿನ",
     "priorBaseline": "ಹಿಂದಿನ 30 ದಿನ (ಒಟ್ಟು)",
+    "prior30dAvg": "ಹಿಂದಿನ 30 ದಿನ (ಸರಾಸರಿ)",
+    "spike": "ಸ್ಪೈಕ್",
     "weekdayWeekend": "ವಾರದ ದಿನ vs ವಾರಾಂತ್ಯ ತೀವ್ರತೆ",
     "weekendOrange": "ಕಿತ್ತಳೆ = ವಾರಾಂತ್ಯ",
     "weekdayRate": "ವಾರದ ದಿನ ~{{rate}}/ದಿನ",

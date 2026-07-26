@@ -20,6 +20,7 @@ import { HeatmapLayer } from "@deck.gl/aggregation-layers";
 import { ScatterplotLayer } from "@deck.gl/layers";
 import type { PickingInfo } from "@deck.gl/core";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { useTranslation } from "react-i18next";
 
 import {
   fetchIncidentsGeoJson,
@@ -45,23 +46,28 @@ const GoogleHybridCrimeMap = dynamic(
     import("@/widgets/map-viewport/GoogleHybridCrimeMap").then((m) => m.GoogleHybridCrimeMap),
   {
     ssr: false,
-    loading: () => (
-      <div
-        style={{
-          minHeight: 520,
-          display: "grid",
-          placeItems: "center",
-          border: "1px solid #dadce0",
-          borderRadius: 12,
-          color: "#5f6368",
-          background: "#e8eaed",
-        }}
-      >
-        Loading map…
-      </div>
-    ),
+    loading: () => <MapLoadingFallback />,
   },
 );
+
+function MapLoadingFallback() {
+  const { t } = useTranslation("ai");
+  return (
+    <div
+      style={{
+        minHeight: 520,
+        display: "grid",
+        placeItems: "center",
+        border: "1px solid #dadce0",
+        borderRadius: 12,
+        color: "#5f6368",
+        background: "#e8eaed",
+      }}
+    >
+      {t("map.loadingMap")}
+    </div>
+  );
+}
 
 type IncidentPoint = {
   position: [number, number];
@@ -105,6 +111,8 @@ const chromeBtn = (active: boolean): CSSProperties => ({
 });
 
 function MapLibreSatelliteHybrid({ layerMode, severity }: CrimeMapViewportProps) {
+  const { t } = useTranslation("ai");
+  const { t: tc } = useTranslation("common");
   const [viewMode, setViewMode] = useState<MapViewMode>("2d");
   const [viewState, setViewState] = useState({
     longitude: BENGALURU_CENTER.longitude,
@@ -158,15 +166,15 @@ function MapLibreSatelliteHybrid({ layerMode, severity }: CrimeMapViewportProps)
       if (controller.signal.aborted) return;
       if (err instanceof DOMException && err.name === "AbortError") return;
       if (err instanceof ApiError && err.status === 401) {
-        setError("Sign in required — open /login with seeded admin credentials.");
+        setError(tc("signInRequired"));
       } else {
-        setError(err instanceof Error ? err.message : "Failed to load incidents");
+        setError(err instanceof Error ? err.message : t("map.errorIncidents"));
       }
       startTransition(() => setPoints([]));
     } finally {
       if (!controller.signal.aborted) setLoading(false);
     }
-  }, [mapRef]);
+  }, [mapRef, t, tc]);
 
   const scheduleLoad = useCallback(
     (immediate = false, showLoading = false) => {
@@ -390,7 +398,7 @@ function MapLibreSatelliteHybrid({ layerMode, severity }: CrimeMapViewportProps)
           color: "#3c4043",
         }}
       >
-        <span>{loading ? "Loading…" : `${filtered.length} incidents in view`}</span>
+        <span>{loading ? tc("loading") : t("map.incidentsInView", { count: filtered.length })}</span>
         <div
           style={{
             display: "flex",
@@ -400,7 +408,7 @@ function MapLibreSatelliteHybrid({ layerMode, severity }: CrimeMapViewportProps)
             border: "1px solid #dadce0",
           }}
           role="group"
-          aria-label="Map view mode"
+          aria-label={t("map.viewMode")}
         >
           <button
             type="button"
@@ -431,7 +439,7 @@ function MapLibreSatelliteHybrid({ layerMode, severity }: CrimeMapViewportProps)
             scheduleLoad(true, true);
           }}
         >
-          Refresh
+          {t("map.refresh")}
         </button>
       </div>
 
@@ -478,13 +486,13 @@ function MapLibreSatelliteHybrid({ layerMode, severity }: CrimeMapViewportProps)
               onClick={() => setSelected(null)}
               style={{ background: "transparent", border: 0, color: "#5f6368", cursor: "pointer", fontSize: 16 }}
             >
-              ×
+              {tc("close")}
             </button>
           </div>
           <p style={{ margin: "8px 0 0", color: "#5f6368" }}>
-            Severity: {selected.severity}
+            {t("map.popupSeverity")} {selected.severity}
             <br />
-            Occurred: {new Date(selected.occurred_at).toLocaleString()}
+            {t("map.popupOccurred")} {new Date(selected.occurred_at).toLocaleString()}
           </p>
         </aside>
       ) : null}

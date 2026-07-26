@@ -18,7 +18,9 @@
     "peakHour": "Peak hour",
     "topOffenseShare": "Top offense share",
     "highCritical": "High/critical",
-    "offenseMix": "Offense mix"
+    "offenseMix": "Offense mix",
+    "nowPrior": "{{current}} now · {{prior}} prior",
+    "incidentsCount": "{{count}} incidents"
   },
   "findings": {
     "title": "Analyst findings",
@@ -33,9 +35,12 @@
   },
   "charts": {
     "periodImpact": "Period impact — current vs prior baseline",
+    "periodImpactShort": "Period impact — current vs prior",
     "periodHint": "Spikes marked · dashed line = prior-period daily average",
     "current30d": "Current 30d",
     "priorBaseline": "Prior 30d (total)",
+    "prior30dAvg": "Prior 30d (avg)",
+    "spike": "Spike",
     "weekdayWeekend": "Weekday vs weekend intensity",
     "weekendOrange": "Orange = weekend",
     "weekdayRate": "Weekday ~{{rate}}/day",

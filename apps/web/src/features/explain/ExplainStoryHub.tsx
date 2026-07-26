@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 import { ExplainPanel } from "@/features/explain";
 import { StoryPlaybackPanel } from "@/features/story";
@@ -10,6 +11,7 @@ export type ExplainView = "explain" | "story";
 
 /** Combined Explain + Story hub — Story keeps full playback via tab/link. */
 export function ExplainStoryHub() {
+  const { t } = useTranslation("ai");
   const params = useSearchParams();
   const router = useRouter();
   const view: ExplainView = params.get("view") === "story" ? "story" : "explain";
@@ -27,7 +29,7 @@ export function ExplainStoryHub() {
     <div style={{ display: "grid", gap: 16 }}>
       <div
         role="tablist"
-        aria-label="Explain and Story"
+        aria-label={t("explain.hubAria")}
         style={{
           display: "inline-flex",
           gap: 6,
@@ -40,10 +42,10 @@ export function ExplainStoryHub() {
         }}
       >
         <TabButton active={view === "explain"} onClick={() => setView("explain")}>
-          Explain
+          {t("explain.tabExplain")}
         </TabButton>
         <TabButton active={view === "story"} onClick={() => setView("story")}>
-          Story playback
+          {t("explain.tabStory")}
         </TabButton>
       </div>
 

@@ -28,6 +28,7 @@ import {
 } from "@/features/map/constants";
 import { createDebouncedRunner, normalizeBbox } from "@/features/map/perf";
 import { ApiError } from "@/shared/api/client";
+import { useTranslation } from "react-i18next";
 
 export type IncidentPoint = {
   position: [number, number];
@@ -93,6 +94,8 @@ type InnerProps = {
 };
 
 function GoogleHybridInner({ layerMode, severity, viewMode, onViewModeChange }: InnerProps) {
+  const { t } = useTranslation("ai");
+  const { t: tc } = useTranslation("common");
   const map = useMap();
   const [points, setPoints] = useState<IncidentPoint[]>([]);
   const [loading, setLoading] = useState(false);
@@ -129,16 +132,16 @@ function GoogleHybridInner({ layerMode, severity, viewMode, onViewModeChange }: 
         if (controller.signal.aborted) return;
         if (err instanceof DOMException && err.name === "AbortError") return;
         if (err instanceof ApiError && err.status === 401) {
-          setError("Sign in required — open /login with seeded admin credentials.");
+          setError(tc("signInRequired"));
         } else {
-          setError(err instanceof Error ? err.message : "Failed to load incidents");
+          setError(err instanceof Error ? err.message : t("map.errorIncidents"));
         }
         startTransition(() => setPoints([]));
       } finally {
         if (!controller.signal.aborted) setLoading(false);
       }
     },
-    [map],
+    [map, t, tc],
   );
 
   const scheduleLoad = useCallback(
@@ -217,7 +220,7 @@ function GoogleHybridInner({ layerMode, severity, viewMode, onViewModeChange }: 
           color: "#3c4043",
         }}
       >
-        <span>{loading ? "Loading…" : `${filtered.length} incidents in view`}</span>
+        <span>{loading ? tc("loading") : t("map.incidentsInView", { count: filtered.length })}</span>
         <div
           style={{
             display: "flex",
@@ -227,7 +230,7 @@ function GoogleHybridInner({ layerMode, severity, viewMode, onViewModeChange }: 
             border: "1px solid #dadce0",
           }}
           role="group"
-          aria-label="Map view mode"
+          aria-label={t("map.viewMode")}
         >
           <button
             type="button"
@@ -258,7 +261,7 @@ function GoogleHybridInner({ layerMode, severity, viewMode, onViewModeChange }: 
             scheduleLoad(true, true);
           }}
         >
-          Refresh
+          {t("map.refresh")}
         </button>
       </div>
 
@@ -311,13 +314,13 @@ function GoogleHybridInner({ layerMode, severity, viewMode, onViewModeChange }: 
                 fontSize: 16,
               }}
             >
-              ×
+              {tc("close")}
             </button>
           </div>
           <p style={{ margin: "8px 0 0", color: "#5f6368" }}>
-            Severity: {selected.severity}
+            {t("map.popupSeverity")} {selected.severity}
             <br />
-            Occurred: {new Date(selected.occurred_at).toLocaleString()}
+            {t("map.popupOccurred")} {new Date(selected.occurred_at).toLocaleString()}
           </p>
         </aside>
       ) : null}

@@ -17,6 +17,7 @@ import { useAppLocale } from "@/shared/i18n/useAppLocale";
 
 export function ReportsPanel() {
   const { t } = useTranslation("reports");
+  const { t: tc } = useTranslation("common");
   const locale = useAppLocale();
   const [templates, setTemplates] = useState<ReportTemplate[]>([]);
   const [templateId, setTemplateId] = useState("weekly");
@@ -40,10 +41,10 @@ export function ReportsPanel() {
         if (!cancelled) {
           setError(
             e instanceof ApiError && e.status === 401
-              ? "Sign in required — open /login with seeded admin credentials."
+              ? tc("signInRequired")
               : e instanceof Error
                 ? e.message
-                : "Failed to load templates",
+                : t("errorTemplates"),
           );
         }
       }
@@ -51,7 +52,7 @@ export function ReportsPanel() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t, tc]);
 
   async function onGenerate() {
     setLoading(true);
@@ -199,37 +200,37 @@ export function ReportsPanel() {
 
           <div style={disclaimerStyle}>{report.disclaimer}</div>
 
-          <Section title="1. Executive Summary">
+          <Section title={t("sections.executiveSummary")}>
             <p style={{ margin: 0, lineHeight: 1.6, fontSize: 14 }}>{report.executive_summary}</p>
           </Section>
 
-          <Section title="2. Crime Overview">
+          <Section title={t("sections.overview")}>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(120px,1fr))", gap: 10, marginBottom: 12 }}>
-              <Stat label="Total crimes" value={String(report.overview.total_incidents)} />
+              <Stat label={t("stats.totalCrimes")} value={String(report.overview.total_incidents)} />
               <Stat
-                label="vs prior window"
+                label={t("stats.vsPrior")}
                 value={
                   report.overview.delta_pct == null
                     ? "—"
                     : `${report.overview.delta_pct >= 0 ? "+" : ""}${report.overview.delta_pct}%`
                 }
               />
-              <Stat label="Open" value={String(report.overview.open_incidents)} />
-              <Stat label="High/critical" value={String(report.overview.high_severity)} />
+              <Stat label={t("stats.open")} value={String(report.overview.open_incidents)} />
+              <Stat label={t("stats.highCritical")} value={String(report.overview.high_severity)} />
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 12 }} className="report-charts">
               <div>
-                <div style={{ fontSize: 12, color: "var(--cl-muted)", marginBottom: 6 }}>Trend</div>
+                <div style={{ fontSize: 12, color: "var(--cl-muted)", marginBottom: 6 }}>{t("charts.trend")}</div>
                 <Chart option={trendOption} height={220} />
               </div>
               <div>
-                <div style={{ fontSize: 12, color: "var(--cl-muted)", marginBottom: 6 }}>Offense mix</div>
+                <div style={{ fontSize: 12, color: "var(--cl-muted)", marginBottom: 6 }}>{t("charts.offenseMix")}</div>
                 <Chart option={offenseOption} height={220} />
               </div>
             </div>
           </Section>
 
-          <Section title="3. AI Insights">
+          <Section title={t("sections.insights")}>
             <div style={{ display: "grid", gap: 8 }}>
               {report.insights.map((i) => (
                 <div key={i.title} style={cardStyle}>
@@ -241,18 +242,18 @@ export function ReportsPanel() {
             </div>
           </Section>
 
-          <Section title="4. Hotspot Analysis">
+          <Section title={t("sections.hotspots")}>
             <div style={{ display: "grid", gap: 8 }}>
               {report.hotspots.map((h) => (
                 <div key={h.label} style={cardStyle}>
                   <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
                     <strong>{h.label}</strong>
                     <span style={{ fontSize: 12, color: "var(--cl-muted)" }}>
-                      {h.risk_level} · {(h.score * 100).toFixed(0)}% · conf {Math.round(h.confidence * 100)}%
+                      {h.risk_level} · {(h.score * 100).toFixed(0)}% · {t("confShort", { pct: Math.round(h.confidence * 100) })}
                     </span>
                   </div>
                   <div style={{ fontSize: 12, color: "var(--cl-muted)", marginTop: 4 }}>
-                    Factors: {h.factors.join(" · ")}
+                    {t("factors")}: {h.factors.join(" · ")}
                   </div>
                   <div style={{ fontSize: 13, marginTop: 6 }}>{h.suggested_action}</div>
                 </div>
@@ -260,7 +261,7 @@ export function ReportsPanel() {
             </div>
           </Section>
 
-          <Section title="5. Predictions (Forecast)">
+          <Section title={t("sections.predictions")}>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 8 }}>
               {report.predictions.map((p) => (
                 <div key={p.scope_name} style={cardStyle}>
@@ -268,7 +269,7 @@ export function ReportsPanel() {
                   <div style={{ fontWeight: 600, marginTop: 6 }}>{p.scope_name}</div>
                   <div style={{ fontSize: 22, fontWeight: 700 }}>{(p.risk_score * 100).toFixed(0)}%</div>
                   <div style={{ fontSize: 12, color: "var(--cl-muted)" }}>
-                    {p.risk_band} · {Math.round(p.confidence * 100)}% confidence
+                    {p.risk_band} · {t("confidencePct", { pct: Math.round(p.confidence * 100) })}
                   </div>
                   <div style={{ fontSize: 12, marginTop: 4 }}>{p.note}</div>
                 </div>
@@ -277,21 +278,24 @@ export function ReportsPanel() {
           </Section>
 
           {report.xai_summary ? (
-            <Section title="6. Explainable AI Summary">
+            <Section title={t("sections.xai")}>
               <p style={{ margin: "0 0 8px", fontSize: 14, lineHeight: 1.5 }}>{report.xai_summary.summary}</p>
               <div style={{ fontSize: 13 }}>
-                <strong>Primary risk drivers:</strong> {report.xai_summary.top_factors.join(" · ")}
+                <strong>{t("primaryDrivers")}</strong> {report.xai_summary.top_factors.join(" · ")}
               </div>
               <div style={{ fontSize: 12, color: "var(--cl-muted)", marginTop: 6 }}>
-                Scope {report.xai_summary.scope_name} · {Math.round(report.xai_summary.confidence * 100)}% confidence
+                {t("scopeConfidence", {
+                  scope: report.xai_summary.scope_name,
+                  pct: Math.round(report.xai_summary.confidence * 100),
+                })}
               </div>
               <Link className="no-print" href="/explain" style={{ color: "var(--cl-accent)", fontSize: 13 }}>
-                Open Decision Card →
+                {t("openDecisionCard")}
               </Link>
             </Section>
           ) : null}
 
-          <Section title="7. Operational Recommendations">
+          <Section title={t("sections.recommendations")}>
             <div style={{ display: "grid", gap: 8 }}>
               {report.recommendations.map((r) => (
                 <div key={r.title} style={cardStyle}>
@@ -305,7 +309,7 @@ export function ReportsPanel() {
             </div>
           </Section>
 
-          <Section title="8. Resource Planning">
+          <Section title={t("sections.resources")}>
             <div style={{ display: "grid", gap: 8 }}>
               {report.resource_plan.map((r) => (
                 <div key={r.division} style={{ ...cardStyle, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
@@ -319,7 +323,7 @@ export function ReportsPanel() {
             </div>
           </Section>
 
-          <Section title="9. Action Checklist">
+          <Section title={t("sections.checklist")}>
             <div style={{ display: "grid", gap: 8 }}>
               {report.checklist.map((c) => (
                 <label key={c.id} style={{ ...cardStyle, display: "flex", gap: 10, alignItems: "flex-start", cursor: "pointer" }}>

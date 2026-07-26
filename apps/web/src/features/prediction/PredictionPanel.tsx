@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import type { EChartsOption } from "echarts";
+import { useTranslation } from "react-i18next";
 
 import {
   fetchCurrentPredictions,
@@ -15,8 +16,12 @@ import {
   type PredictionValue,
 } from "@/features/prediction/api";
 import { Chart } from "@/shared/ui/Chart";
+import { useAppLocale } from "@/shared/i18n/useAppLocale";
 
 export function PredictionPanel() {
+  const { t } = useTranslation("ai");
+  const { t: tc } = useTranslation("common");
+  const locale = useAppLocale();
   const [run, setRun] = useState<PredictionRun | null>(null);
   const [values, setValues] = useState<PredictionValue[]>([]);
   const [hotspots, setHotspots] = useState<HotspotFeature[]>([]);
@@ -47,7 +52,7 @@ export function PredictionPanel() {
         setModels(mods.data);
         if (pred.data.values[0]) setSelected(pred.data.values[0].id);
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load predictions");
+        if (!cancelled) setError(e instanceof Error ? e.message : t("prediction.errorLoad"));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -55,7 +60,7 @@ export function PredictionPanel() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [locale, t]);
 
   useEffect(() => {
     if (!selected) return;
@@ -85,7 +90,7 @@ export function PredictionPanel() {
     yAxis: {
       type: "category",
       data: values
-        .map((v) => String(v.properties.station_name ?? v.properties.station_code ?? "Station"))
+        .map((v) => String(v.properties.station_name ?? v.properties.station_code ?? tc("station")))
         .reverse(),
       axisLabel: { color: "#9aa8c7", width: 110, overflow: "truncate" },
     },
@@ -125,28 +130,34 @@ export function PredictionPanel() {
   return (
     <div style={{ display: "grid", gap: 16 }}>
       <header>
-        <h1 style={{ margin: 0 }}>Prediction</h1>
+        <h1 style={{ margin: 0 }}>{t("prediction.title")}</h1>
         <p style={{ margin: "6px 0 0", color: "var(--cl-muted)", fontSize: 14 }}>
-          Precomputed risk scores + SHAP explanations
-          {run ? ` · ${run.model_code}@${run.model_version} (${run.status_banner})` : ""}.
+          {t("prediction.subtitle")}
+          {run
+            ? t("prediction.subtitleRun", {
+                model: run.model_code,
+                version: run.model_version,
+                status: run.status_banner,
+              })
+            : ""}
         </p>
       </header>
 
       {error && <Banner>{error}</Banner>}
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 12 }}>
-        <Stat label="Model" value={models[0] ? `${models[0].model_code}` : "—"} />
-        <Stat label="Status" value={models[0]?.status ?? "—"} />
-        <Stat label="Hotspot method" value={hotspotMethod ?? "—"} />
-        <Stat label="Stations scored" value={loading ? "…" : String(values.length)} />
+        <Stat label={t("prediction.statModel")} value={models[0] ? `${models[0].model_code}` : "—"} />
+        <Stat label={t("prediction.statStatus")} value={models[0]?.status ?? "—"} />
+        <Stat label={t("prediction.statHotspotMethod")} value={hotspotMethod ?? "—"} />
+        <Stat label={t("prediction.statStations")} value={loading ? "…" : String(values.length)} />
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.2fr) minmax(0,1fr)", gap: 12 }}>
-        <Panel title="Station risk scores">
+        <Panel title={t("prediction.stationRisk")}>
           <Chart option={riskOption} height={280} loading={loading} />
           <div style={{ display: "grid", gap: 6, marginTop: 8 }}>
             {values.map((v) => {
-              const name = String(v.properties.station_name ?? "Station");
+              const name = String(v.properties.station_name ?? tc("station"));
               const active = selected === v.id;
               return (
                 <button
@@ -166,8 +177,8 @@ export function PredictionPanel() {
             })}
           </div>
         </Panel>
-        <Panel title="SHAP local contributions">
-          {shapOption ? <Chart option={shapOption} height={240} /> : <Empty text="Select a station" />}
+        <Panel title={t("prediction.shapTitle")}>
+          {shapOption ? <Chart option={shapOption} height={240} /> : <Empty text={t("prediction.selectStation")} />}
           {expl?.summary_text && (
             <p style={{ color: "var(--cl-muted)", fontSize: 13, lineHeight: 1.5, marginTop: 8 }}>
               {expl.summary_text}
@@ -175,8 +186,11 @@ export function PredictionPanel() {
           )}
           {expl && (
             <div style={{ fontSize: 12, color: "var(--cl-muted)", marginTop: 6 }}>
-              base {expl.base_value.toFixed(2)} → output {expl.output_value.toFixed(3)} ·{" "}
-              {expl.model_version}
+              {t("prediction.shapMeta", {
+                base: expl.base_value.toFixed(2),
+                output: expl.output_value.toFixed(3),
+                version: expl.model_version,
+              })}
             </div>
           )}
           {selected ? (
@@ -194,23 +208,27 @@ export function PredictionPanel() {
                 fontSize: 13,
               }}
             >
-              Open Decision Card →
+              {t("prediction.openDecision")}
             </Link>
           ) : null}
         </Panel>
       </div>
 
-      <Panel title="Current hotspots">
+      <Panel title={t("prediction.currentHotspots")}>
         <div style={{ display: "grid", gap: 8 }}>
           {hotspots.map((h) => (
             <div key={h.id} style={hotspotRow}>
               <strong>#{h.rank}</strong>
-              <span>{String(h.properties.label ?? "Hotspot")}</span>
-              <span style={{ color: "var(--cl-muted)" }}>score {h.score.toFixed(2)}</span>
-              <span style={{ color: "var(--cl-muted)" }}>{h.incident_count} incidents</span>
+              <span>{String(h.properties.label ?? tc("hotspot"))}</span>
+              <span style={{ color: "var(--cl-muted)" }}>
+                {t("prediction.hotspotScore", { score: h.score.toFixed(2) })}
+              </span>
+              <span style={{ color: "var(--cl-muted)" }}>
+                {t("prediction.hotspotIncidents", { count: h.incident_count })}
+              </span>
             </div>
           ))}
-          {!loading && hotspots.length === 0 && <Empty text="No hotspots" />}
+          {!loading && hotspots.length === 0 && <Empty text={t("prediction.noHotspots")} />}
         </div>
       </Panel>
     </div>

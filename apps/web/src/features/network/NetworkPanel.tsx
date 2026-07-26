@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import type { EChartsOption } from "echarts";
+import { useTranslation } from "react-i18next";
 
 import {
   fetchNetworkGraph,
@@ -11,8 +12,11 @@ import {
   type RepeatOffender,
 } from "@/features/network/api";
 import { Chart } from "@/shared/ui/Chart";
+import { useAppLocale } from "@/shared/i18n/useAppLocale";
 
 export function NetworkPanel() {
+  const { t } = useTranslation("ai");
+  const locale = useAppLocale();
   const [nodes, setNodes] = useState<NetworkNode[]>([]);
   const [edges, setEdges] = useState<NetworkEdge[]>([]);
   const [repeats, setRepeats] = useState<RepeatOffender[]>([]);
@@ -32,7 +36,7 @@ export function NetworkPanel() {
         setRepeats(reps.data);
         setSelected(graph.data.nodes.find((n) => n.is_repeat_offender) ?? graph.data.nodes[0] ?? null);
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load network");
+        if (!cancelled) setError(e instanceof Error ? e.message : t("network.errorLoad"));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -40,7 +44,7 @@ export function NetworkPanel() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [locale, t]);
 
   const graphOption: EChartsOption = {
     tooltip: {},
@@ -67,7 +71,7 @@ export function NetworkPanel() {
           lineStyle: { width: Math.max(1, e.weight), color: "#9aa8c7", opacity: 0.55 },
           label: { show: false },
         })),
-        categories: [{ name: "Repeat" }, { name: "Other" }],
+        categories: [{ name: t("network.categoryRepeat") }, { name: t("network.categoryOther") }],
         lineStyle: { curveness: 0.15 },
         emphasis: { focus: "adjacency" },
       },
@@ -77,10 +81,8 @@ export function NetworkPanel() {
   return (
     <div style={{ display: "grid", gap: 16 }}>
       <header>
-        <h1 style={{ margin: 0 }}>Network Analysis</h1>
-        <p style={{ margin: "6px 0 0", color: "var(--cl-muted)", fontSize: 14 }}>
-          Co-accused / associate graph from seeded demo persons.
-        </p>
+        <h1 style={{ margin: 0 }}>{t("network.title")}</h1>
+        <p style={{ margin: "6px 0 0", color: "var(--cl-muted)", fontSize: 14 }}>{t("network.subtitle")}</p>
       </header>
 
       {error && (
@@ -98,28 +100,26 @@ export function NetworkPanel() {
       )}
 
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.4fr) minmax(260px,0.8fr)", gap: 12 }}>
-        <Panel title={`Graph · ${nodes.length} nodes / ${edges.length} edges`}>
+        <Panel title={t("network.graphTitle", { nodes: nodes.length, edges: edges.length })}>
           <Chart option={graphOption} height={420} loading={loading} />
         </Panel>
         <div style={{ display: "grid", gap: 12, alignContent: "start" }}>
-          <Panel title="Inspector">
+          <Panel title={t("network.inspector")}>
             {selected ? (
               <div style={{ display: "grid", gap: 8, fontSize: 13 }}>
                 <div style={{ fontWeight: 700, fontSize: 16 }}>{selected.label}</div>
                 <div style={{ color: "var(--cl-muted)" }}>
-                  {selected.is_repeat_offender ? "Repeat offender" : "Person of interest"}
+                  {selected.is_repeat_offender ? t("network.repeatOffender") : t("network.personOfInterest")}
                 </div>
-                <div>Incidents: {selected.incident_count}</div>
+                <div>{t("network.incidentsLabel", { count: selected.incident_count })}</div>
                 <div>
-                  Linked edges:{" "}
-                  {
-                    edges.filter((e) => e.source === selected.id || e.target === selected.id)
-                      .length
-                  }
+                  {t("network.linkedEdges", {
+                    count: edges.filter((e) => e.source === selected.id || e.target === selected.id).length,
+                  })}
                 </div>
               </div>
             ) : (
-              <div style={{ color: "var(--cl-muted)", fontSize: 13 }}>Select a node</div>
+              <div style={{ color: "var(--cl-muted)", fontSize: 13 }}>{t("network.selectNode")}</div>
             )}
             <div style={{ display: "grid", gap: 6, marginTop: 12 }}>
               {nodes.map((n) => (
@@ -137,13 +137,13 @@ export function NetworkPanel() {
               ))}
             </div>
           </Panel>
-          <Panel title="Repeat offenders">
+          <Panel title={t("network.repeatOffenders")}>
             <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 8 }}>
               {repeats.map((r) => (
                 <li key={r.person_id} style={repeatRow}>
                   <div style={{ fontWeight: 600 }}>{r.full_name}</div>
                   <div style={{ color: "var(--cl-muted)", fontSize: 12 }}>
-                    score {r.score.toFixed(2)} · {r.incident_count} incidents
+                    {t("network.repeatMeta", { score: r.score.toFixed(2), count: r.incident_count })}
                   </div>
                 </li>
               ))}

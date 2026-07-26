@@ -15,15 +15,34 @@
   "bilingualFuture": "Bilingual EN+KN export will be available in a later release.",
   "sections": {
     "cover": "Cover",
-    "executiveSummary": "Executive Summary",
-    "overview": "Crime Overview",
-    "hotspots": "Hotspot Analysis",
-    "predictions": "Predictions",
-    "recommendations": "Operational Recommendations",
-    "checklist": "Action Checklist",
-    "xai": "Explainability summary"
+    "executiveSummary": "1. Executive Summary",
+    "overview": "2. Crime Overview",
+    "insights": "3. AI Insights",
+    "hotspots": "4. Hotspot Analysis",
+    "predictions": "5. Predictions (Forecast)",
+    "xai": "6. Explainable AI Summary",
+    "recommendations": "7. Operational Recommendations",
+    "resources": "8. Resource Planning",
+    "checklist": "9. Action Checklist"
   },
+  "primaryDrivers": "Primary risk drivers:",
+  "scopeConfidence": "Scope {{scope}} · {{pct}}% confidence",
+  "openDecisionCard": "Open Decision Card →",
+  "confidencePct": "{{pct}}% confidence",
+  "confShort": "conf {{pct}}%",
+  "stats": {
+    "totalCrimes": "Total crimes",
+    "vsPrior": "vs prior window",
+    "open": "Open",
+    "highCritical": "High/critical"
+  },
+  "charts": {
+    "trend": "Trend",
+    "offenseMix": "Offense mix"
+  },
+  "factors": "Factors",
   "empty": "Generate a report to begin.",
   "errorLoad": "Failed to generate report",
+  "errorTemplates": "Failed to load templates",
   "disclaimer": "Intelligence report assembled from CrimeLens analytics. Not an operational order."
 }

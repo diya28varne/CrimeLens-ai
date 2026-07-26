@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, 
 import Map, { NavigationControl } from "react-map-gl/maplibre";
 import { ScatterplotLayer } from "@deck.gl/layers";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { useTranslation } from "react-i18next";
 
 import { BENGALURU_CENTER, MAP_STYLE, SEVERITY_COLOR } from "@/features/map/constants";
 import {
@@ -22,6 +23,7 @@ import {
 } from "@/features/story/api";
 import { DeckGLOverlay } from "@/widgets/map-viewport/deck-overlay";
 import { ApiError } from "@/shared/api/client";
+import { useAppLocale } from "@/shared/i18n/useAppLocale";
 
 const SPEEDS = [0.5, 1, 2, 4] as const;
 
@@ -49,6 +51,9 @@ function stageColor(stage: string): [number, number, number, number] {
 }
 
 export function StoryPlaybackPanel({ explainHref = "/explain" }: { explainHref?: string }) {
+  const { t } = useTranslation("ai");
+  const { t: tc } = useTranslation("common");
+  const locale = useAppLocale();
   const [frames, setFrames] = useState<StoryFrame[]>([]);
   const [chapters, setChapters] = useState<StoryChapter[]>([]);
   const [events, setEvents] = useState<StoryEvent[]>([]);
@@ -98,22 +103,21 @@ export function StoryPlaybackPanel({ explainHref = "/explain" }: { explainHref?:
     } catch (e) {
       setError(
         e instanceof ApiError && e.status === 401
-          ? "Sign in required — open /login with seeded admin credentials."
+          ? tc("signInRequired")
           : e instanceof Error
             ? e.message
-            : "Failed to load story",
+            : t("story.errorLoad"),
       );
       setFrames([]);
     } finally {
       setLoading(false);
     }
-  }, [offense]);
+  }, [offense, t, tc]);
 
   useEffect(() => {
     void load();
-  }, [load]);
+  }, [load, locale]);
 
-  // Accumulate points up to current index
   const { points, density, frame } = useMemo(() => {
     if (!frames.length) return { points: [] as StoryPoint[], density: [] as DensityCell[], frame: null };
     const i = Math.min(index, frames.length - 1);
@@ -122,14 +126,12 @@ export function StoryPlaybackPanel({ explainHref = "/explain" }: { explainHref?:
     return { points: pts, density: frames[i].density_cells, frame: frames[i] };
   }, [frames, index]);
 
-  // Highlight chapter when cursor enters its window
   useEffect(() => {
     if (!frame || !chapters.length) return;
     const hit = [...chapters].reverse().find((c) => c.t_start <= frame.t && frame.t <= c.t_end);
     if (hit) setActiveChapter(hit);
   }, [frame, chapters]);
 
-  // Playback ticker
   useEffect(() => {
     if (!playing || frames.length === 0) {
       if (playRef.current) window.clearInterval(playRef.current);
@@ -165,7 +167,6 @@ export function StoryPlaybackPanel({ explainHref = "/explain" }: { explainHref?:
 
     let visiblePoints = points;
     if (compareWeekend && frame) {
-      // lite period compare: dim non-weekend points when toggle on
       const weekendish = new Set(
         frames
           .filter((f) => {
@@ -226,7 +227,7 @@ export function StoryPlaybackPanel({ explainHref = "/explain" }: { explainHref?:
       });
       setDetective(res.data);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Detective mode failed");
+      setError(e instanceof Error ? e.message : t("story.errorDetective"));
     } finally {
       setDetectLoading(false);
     }
@@ -238,10 +239,8 @@ export function StoryPlaybackPanel({ explainHref = "/explain" }: { explainHref?:
     <div style={{ display: "grid", gridTemplateRows: "auto 1fr auto", gap: 10, height: "calc(100vh - 3rem)", minHeight: 620 }}>
       <header style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 22 }}>Crime Story Playback</h1>
-          <p style={{ margin: "4px 0 0", color: "var(--cl-muted)", fontSize: 13 }}>
-            Rewind the city — watch how hotspots form, and investigate any moment. Chapters, detective brief, and journey are all here.
-          </p>
+          <h1 style={{ margin: 0, fontSize: 22 }}>{t("story.title")}</h1>
+          <p style={{ margin: "4px 0 0", color: "var(--cl-muted)", fontSize: 13 }}>{t("story.subtitle")}</p>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
           <Link
@@ -255,16 +254,12 @@ export function StoryPlaybackPanel({ explainHref = "/explain" }: { explainHref?:
               fontSize: 13,
             }}
           >
-            ← Back to Explain
+            {t("story.backExplain")}
           </Link>
           <label style={{ fontSize: 12, color: "var(--cl-muted)" }}>
-            Pattern replay{" "}
-            <select
-              value={offense}
-              onChange={(e) => setOffense(e.target.value)}
-              style={selectStyle}
-            >
-              <option value="">All offenses</option>
+            {t("story.patternReplay")}{" "}
+            <select value={offense} onChange={(e) => setOffense(e.target.value)} style={selectStyle}>
+              <option value="">{t("story.allOffenses")}</option>
               {offenseCodes.map((c) => (
                 <option key={c} value={c}>
                   {c}
@@ -274,7 +269,7 @@ export function StoryPlaybackPanel({ explainHref = "/explain" }: { explainHref?:
           </label>
           <label style={{ fontSize: 12, display: "flex", gap: 6, alignItems: "center" }}>
             <input type="checkbox" checked={compareWeekend} onChange={(e) => setCompareWeekend(e.target.checked)} />
-            Weekend-only compare
+            {t("story.weekendCompare")}
           </label>
         </div>
       </header>
@@ -284,7 +279,7 @@ export function StoryPlaybackPanel({ explainHref = "/explain" }: { explainHref?:
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) 300px", gap: 10, minHeight: 0 }}>
         <div style={{ position: "relative", borderRadius: 12, overflow: "hidden", border: "1px solid var(--cl-border)" }}>
           {loading ? (
-            <div style={{ padding: 24, color: "var(--cl-muted)" }}>Loading story frames…</div>
+            <div style={{ padding: 24, color: "var(--cl-muted)" }}>{t("story.loadingFrames")}</div>
           ) : (
             <Map
               {...viewState}
@@ -297,13 +292,13 @@ export function StoryPlaybackPanel({ explainHref = "/explain" }: { explainHref?:
             </Map>
           )}
           <div style={legendStyle}>
-            <div>Density stages: individual → cluster → hotspot → easing</div>
-            <div>Click a point for Crime Journey</div>
+            <div>{t("story.legendStages")}</div>
+            <div>{t("story.legendClick")}</div>
           </div>
           {activeChapter && frame && activeChapter.t_start <= frame.t && frame.t <= activeChapter.t_end ? (
             <div style={chapterToast}>
               <div style={{ fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "#f0c674" }}>
-                Observed chapter
+                {t("story.observedChapter")}
               </div>
               <strong>{activeChapter.title}</strong>
               <p style={{ margin: "6px 0 0", fontSize: 12, lineHeight: 1.45 }}>{activeChapter.narrative}</p>
@@ -312,9 +307,9 @@ export function StoryPlaybackPanel({ explainHref = "/explain" }: { explainHref?:
         </div>
 
         <aside style={{ display: "grid", gap: 10, overflow: "auto", minHeight: 0 }}>
-          <Panel title="AI Detective Mode">
+          <Panel title={t("story.detectiveTitle")}>
             <button type="button" onClick={() => void investigate()} disabled={!frame || detectLoading} style={primaryBtn}>
-              {detectLoading ? "Investigating…" : "Investigate This Moment"}
+              {detectLoading ? t("story.investigating") : t("story.investigate")}
             </button>
             {detective ? (
               <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
@@ -335,19 +330,17 @@ export function StoryPlaybackPanel({ explainHref = "/explain" }: { explainHref?:
                 </ul>
                 {detective.simulation_preset_id ? (
                   <Link href="/simulation" style={{ color: "var(--cl-accent)", fontSize: 12 }}>
-                    Open Simulator →
+                    {t("story.openSimulator")}
                   </Link>
                 ) : null}
                 <p style={{ fontSize: 11, color: "#f0c674", margin: 0 }}>{detective.disclaimer}</p>
               </div>
             ) : (
-              <p style={{ fontSize: 12, color: "var(--cl-muted)", marginTop: 8 }}>
-                Pause on any date and investigate the surrounding window.
-              </p>
+              <p style={{ fontSize: 12, color: "var(--cl-muted)", marginTop: 8 }}>{t("story.detectiveHint")}</p>
             )}
           </Panel>
 
-          <Panel title="Timeline events">
+          <Panel title={t("story.timelineEvents")}>
             <div style={{ display: "grid", gap: 6 }}>
               {events.map((e) => (
                 <button
@@ -367,7 +360,9 @@ export function StoryPlaybackPanel({ explainHref = "/explain" }: { explainHref?:
                     borderColor: eventOnCursor?.id === e.id ? "var(--cl-accent)" : "var(--cl-border)",
                   }}
                 >
-                  <div style={{ fontSize: 11, color: "var(--cl-muted)" }}>{e.t} · {e.kind}</div>
+                  <div style={{ fontSize: 11, color: "var(--cl-muted)" }}>
+                    {e.t} · {e.kind}
+                  </div>
                   <div style={{ fontWeight: 600, fontSize: 13 }}>{e.label}</div>
                   <div style={{ fontSize: 11, color: "var(--cl-muted)" }}>{e.detail}</div>
                 </button>
@@ -376,10 +371,10 @@ export function StoryPlaybackPanel({ explainHref = "/explain" }: { explainHref?:
           </Panel>
 
           {journey ? (
-            <Panel title="Crime Journey">
+            <Panel title={t("story.crimeJourney")}>
               <div style={{ fontWeight: 600, fontSize: 13 }}>{journey.title}</div>
               <div style={{ fontSize: 11, color: "var(--cl-muted)", marginBottom: 8 }}>
-                {journey.offense_code} · {journey.nearby_similar} similar nearby
+                {journey.offense_code} · {t("story.similarNearby", { count: journey.nearby_similar })}
               </div>
               <ol style={{ margin: 0, paddingLeft: 18, fontSize: 12, display: "grid", gap: 6 }}>
                 {journey.steps.map((s) => (
@@ -393,25 +388,19 @@ export function StoryPlaybackPanel({ explainHref = "/explain" }: { explainHref?:
         </aside>
       </div>
 
-      {/* Playback controller */}
       <div style={playerStyle}>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <button type="button" style={ctrlBtn} onClick={() => setIndex((i) => Math.max(0, i - 1))} title="Step back">
+          <button type="button" style={ctrlBtn} onClick={() => setIndex((i) => Math.max(0, i - 1))} title={t("story.stepBack")}>
             ⏮
           </button>
-          <button
-            type="button"
-            style={ctrlBtn}
-            onClick={() => setPlaying((p) => !p)}
-            disabled={!frames.length}
-          >
-            {playing ? "⏸ Pause" : "▶ Play"}
+          <button type="button" style={ctrlBtn} onClick={() => setPlaying((p) => !p)} disabled={!frames.length}>
+            {playing ? t("story.pause") : t("story.play")}
           </button>
           <button
             type="button"
             style={ctrlBtn}
             onClick={() => setIndex((i) => Math.min(frames.length - 1, i + 1))}
-            title="Step forward"
+            title={t("story.stepForward")}
           >
             ⏭
           </button>
@@ -427,16 +416,16 @@ export function StoryPlaybackPanel({ explainHref = "/explain" }: { explainHref?:
             ))}
           </select>
           <span style={{ fontSize: 13, minWidth: 200 }}>
-            {frame ? (
-              <>
-                <strong>{frame.t}</strong> · {frame.cumulative_count} cumulative · +{frame.new_count} today
-              </>
-            ) : (
-              "—"
-            )}
+            {frame
+              ? t("story.frameMeta", {
+                  date: frame.t,
+                  cumulative: frame.cumulative_count,
+                  today: frame.new_count,
+                })
+              : "—"}
           </span>
           {eventOnCursor ? (
-            <span style={{ fontSize: 12, color: "#f0c674" }}>Marker: {eventOnCursor.label}</span>
+            <span style={{ fontSize: 12, color: "#f0c674" }}>{t("story.marker", { label: eventOnCursor.label })}</span>
           ) : null}
         </div>
         <input
@@ -452,7 +441,7 @@ export function StoryPlaybackPanel({ explainHref = "/explain" }: { explainHref?:
         />
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--cl-muted)" }}>
           <span>{frames[0]?.t ?? ""}</span>
-          <span>{chapters.length} narrative chapters · {events.length} event markers</span>
+          <span>{t("story.chaptersMeta", { chapters: chapters.length, events: events.length })}</span>
           <span>{frames[frames.length - 1]?.t ?? ""}</span>
         </div>
       </div>

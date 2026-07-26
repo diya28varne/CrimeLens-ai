@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 import {
   fetchAdvisorBrief,
@@ -9,16 +10,15 @@ import {
   type ActionRec,
   type AdvisorBrief,
   type EvidenceItem,
-  type Pattern,
   type RiskArea,
   type TimelineEntry,
 } from "@/features/advisor/api";
 import { ApiError } from "@/shared/api/client";
-import { useTranslation } from "react-i18next";
 import { useAppLocale } from "@/shared/i18n/useAppLocale";
 
 export function AdvisorPanel() {
   const { t } = useTranslation("ai");
+  const { t: tc } = useTranslation("common");
   const locale = useAppLocale();
   const [brief, setBrief] = useState<AdvisorBrief | null>(null);
   const [loading, setLoading] = useState(true);
@@ -26,26 +26,29 @@ export function AdvisorPanel() {
   const [error, setError] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
 
-  const load = useCallback(async (mode: "current" | "refresh" = "current") => {
-    if (mode === "refresh") setRefreshing(true);
-    else setLoading(true);
-    setError(null);
-    try {
-      const res = mode === "refresh" ? await refreshAdvisorBrief() : await fetchAdvisorBrief();
-      setBrief(res.data);
-    } catch (e) {
-      setError(
-        e instanceof ApiError && e.status === 401
-          ? t("advisor.errorLoad")
-          : e instanceof Error
-            ? e.message
-            : t("advisor.errorLoad"),
-      );
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [t]);
+  const load = useCallback(
+    async (mode: "current" | "refresh" = "current") => {
+      if (mode === "refresh") setRefreshing(true);
+      else setLoading(true);
+      setError(null);
+      try {
+        const res = mode === "refresh" ? await refreshAdvisorBrief() : await fetchAdvisorBrief();
+        setBrief(res.data);
+      } catch (e) {
+        setError(
+          e instanceof ApiError && e.status === 401
+            ? t("advisor.errorLoad")
+            : e instanceof Error
+              ? e.message
+              : t("advisor.errorLoad"),
+        );
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [t],
+  );
 
   useEffect(() => {
     void load("current");
@@ -60,34 +63,32 @@ export function AdvisorPanel() {
       <header style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div>
           <h1 style={{ margin: 0, fontSize: 22 }}>{t("advisor.title")}</h1>
-          <p style={{ margin: "4px 0 0", color: "var(--cl-muted)", fontSize: 13 }}>
-            {t("advisor.subtitle")}
-          </p>
+          <p style={{ margin: "4px 0 0", color: "var(--cl-muted)", fontSize: 13 }}>{t("advisor.subtitle")}</p>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <button type="button" onClick={() => void load("refresh")} disabled={refreshing} style={btnStyle}>
             {refreshing ? "…" : t("advisor.refresh")}
           </button>
           <Link href="/ai" style={{ ...btnStyle, textDecoration: "none", display: "inline-block" }}>
-            Ask Copilot
+            {t("advisor.askCopilot")}
           </Link>
         </div>
       </header>
 
-      <div style={disclaimerStyle}>{brief?.disclaimer ?? "Grounded intelligence briefing — not operational orders."}</div>
+      <div style={disclaimerStyle}>{brief?.disclaimer ?? t("advisor.disclaimerFallback")}</div>
 
       {error ? <div style={{ color: "#ff8e8e", fontSize: 13 }}>{error}</div> : null}
-      {loading && !brief ? <div style={{ color: "var(--cl-muted)" }}>Building briefing…</div> : null}
+      {loading && !brief ? <div style={{ color: "var(--cl-muted)" }}>{t("advisor.building")}</div> : null}
 
       {brief ? (
         <>
-          <Section title="Today’s Intelligence Summary">
+          <Section title={t("advisor.summaryTitle")}>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
-              {brief.summary.kind_tags.map((t) => (
-                <KindBadge key={t} kind={t} />
+              {brief.summary.kind_tags.map((kind) => (
+                <KindBadge key={kind} kind={kind} />
               ))}
               <span style={{ fontSize: 12, color: "var(--cl-muted)" }}>
-                Confidence {Math.round(brief.confidence * 100)}% ·{" "}
+                {t("advisor.confidencePct", { pct: Math.round(brief.confidence * 100) })} ·{" "}
                 {new Date(brief.generated_at).toLocaleString()}
               </span>
             </div>
@@ -95,7 +96,7 @@ export function AdvisorPanel() {
             <p style={{ margin: 0, lineHeight: 1.55, fontSize: 14, color: "var(--cl-text)" }}>{brief.summary.body}</p>
             {brief.summary.week_over_week_pct != null ? (
               <div style={{ marginTop: 10, fontSize: 13, color: "var(--cl-muted)" }}>
-                Window delta:{" "}
+                {t("advisor.windowDelta")}{" "}
                 <strong style={{ color: "var(--cl-text)" }}>
                   {brief.summary.week_over_week_pct >= 0 ? "+" : ""}
                   {brief.summary.week_over_week_pct}%
@@ -104,7 +105,7 @@ export function AdvisorPanel() {
             ) : null}
           </Section>
 
-          <Section title="Emerging patterns">
+          <Section title={t("advisor.patternsTitle")}>
             <div style={{ display: "grid", gap: 8 }}>
               {brief.patterns.map((p) => (
                 <Expandable
@@ -117,7 +118,10 @@ export function AdvisorPanel() {
                       <div style={{ flex: 1, minWidth: 180 }}>
                         <div style={{ fontWeight: 600, fontSize: 14 }}>{p.title}</div>
                         <div style={{ fontSize: 12, color: "var(--cl-muted)", marginTop: 2 }}>
-                          Strength {p.strength} · {Math.round(p.confidence * 100)}% confidence
+                          {t("advisor.strengthConfidence", {
+                            strength: p.strength,
+                            pct: Math.round(p.confidence * 100),
+                          })}
                         </div>
                       </div>
                     </div>
@@ -130,7 +134,7 @@ export function AdvisorPanel() {
             </div>
           </Section>
 
-          <Section title="Risk assessment">
+          <Section title={t("advisor.riskTitle")}>
             <div
               style={{
                 display: "grid",
@@ -144,7 +148,7 @@ export function AdvisorPanel() {
             </div>
           </Section>
 
-          <Section title="Recommended actions">
+          <Section title={t("advisor.recommendations")}>
             <div style={{ display: "grid", gap: 8 }}>
               {brief.actions.map((a) => (
                 <ActionCard key={a.id} action={a} open={openId === a.id} onToggle={() => toggle(a.id)} />
@@ -152,13 +156,11 @@ export function AdvisorPanel() {
             </div>
           </Section>
 
-          <Section title="Intelligence Timeline">
-            <p style={{ margin: "0 0 10px", fontSize: 12, color: "var(--cl-muted)" }}>
-              How assessments evolved (demo history seeded for closed-loop storytelling).
-            </p>
+          <Section title={t("advisor.timelineTitle")}>
+            <p style={{ margin: "0 0 10px", fontSize: 12, color: "var(--cl-muted)" }}>{t("advisor.timelineHint")}</p>
             <div style={{ display: "grid", gap: 8 }}>
-              {brief.timeline.map((t) => (
-                <TimelineRow key={t.id} entry={t} />
+              {brief.timeline.map((entry) => (
+                <TimelineRow key={entry.id} entry={entry} />
               ))}
             </div>
           </Section>
@@ -178,6 +180,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 }
 
 function KindBadge({ kind }: { kind: "observed" | "forecast" }) {
+  const { t } = useTranslation("ai");
   const observed = kind === "observed";
   return (
     <span
@@ -192,7 +195,7 @@ function KindBadge({ kind }: { kind: "observed" | "forecast" }) {
         background: observed ? "rgba(26,188,156,0.12)" : "rgba(240,198,116,0.12)",
       }}
     >
-      {kind}
+      {observed ? t("advisor.kindObserved") : t("advisor.kindForecast")}
     </span>
   );
 }
@@ -208,6 +211,7 @@ function Expandable({
   open: boolean;
   onToggle: () => void;
 }) {
+  const { t: tc } = useTranslation("common");
   return (
     <div style={cardStyle}>
       <button
@@ -223,7 +227,9 @@ function Expandable({
       >
         <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
           <div style={{ flex: 1 }}>{header}</div>
-          <span style={{ color: "var(--cl-muted)", fontSize: 12 }}>{open ? "Hide evidence" : "Evidence"}</span>
+          <span style={{ color: "var(--cl-muted)", fontSize: 12 }}>
+            {open ? tc("hideEvidence") : tc("evidence")}
+          </span>
         </div>
       </button>
       {open ? <div style={{ marginTop: 10, borderTop: "1px solid var(--cl-border)", paddingTop: 10 }}>{children}</div> : null}
@@ -232,7 +238,9 @@ function Expandable({
 }
 
 function EvidenceList({ items }: { items: EvidenceItem[] }) {
-  if (!items.length) return <div style={{ fontSize: 12, color: "var(--cl-muted)" }}>No evidence attachments.</div>;
+  const { t } = useTranslation("ai");
+  const { t: tc } = useTranslation("common");
+  if (!items.length) return <div style={{ fontSize: 12, color: "var(--cl-muted)" }}>{t("advisor.noEvidence")}</div>;
   return (
     <ul style={{ margin: 0, paddingLeft: 16, display: "grid", gap: 6, fontSize: 13 }}>
       {items.map((e, i) => (
@@ -243,7 +251,7 @@ function EvidenceList({ items }: { items: EvidenceItem[] }) {
             <>
               {" "}
               <Link href={e.href} style={{ color: "var(--cl-accent)" }}>
-                Open
+                {tc("open")}
               </Link>
             </>
           ) : null}
@@ -262,6 +270,8 @@ function RiskCard({
   open: boolean;
   onToggle: () => void;
 }) {
+  const { t } = useTranslation("ai");
+  const { t: tc } = useTranslation("common");
   return (
     <div style={cardStyle}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
@@ -270,11 +280,14 @@ function RiskCard({
       </div>
       <div style={{ fontSize: 20, fontWeight: 700, color: riskColor(area.risk_band) }}>{area.risk_band}</div>
       <div style={{ fontSize: 12, color: "var(--cl-muted)", marginTop: 4 }}>
-        Score {area.risk_score.toFixed(2)} · {Math.round(area.confidence * 100)}% confidence
+        {t("advisor.scoreConfidence", {
+          score: area.risk_score.toFixed(2),
+          pct: Math.round(area.confidence * 100),
+        })}
       </div>
       <p style={{ margin: "8px 0 0", fontSize: 12, lineHeight: 1.45 }}>{area.why}</p>
       <button type="button" onClick={onToggle} style={{ ...linkBtn, marginTop: 8 }}>
-        {open ? "Hide evidence" : "Supporting evidence"}
+        {open ? tc("hideEvidence") : tc("supportingEvidence")}
       </button>
       {open ? (
         <div style={{ marginTop: 8 }}>
@@ -294,6 +307,7 @@ function ActionCard({
   open: boolean;
   onToggle: () => void;
 }) {
+  const { t } = useTranslation("ai");
   return (
     <Expandable
       open={open}
@@ -305,7 +319,7 @@ function ActionCard({
             <span style={{ fontWeight: 600, fontSize: 14 }}>{action.title}</span>
           </div>
           <div style={{ fontSize: 12, color: "var(--cl-muted)", marginTop: 4 }}>
-            {Math.round(action.confidence * 100)}% confidence
+            {t("advisor.confidenceOnly", { pct: Math.round(action.confidence * 100) })}
           </div>
         </div>
       }
@@ -314,11 +328,8 @@ function ActionCard({
       <EvidenceList items={action.evidence} />
       {action.simulation_preset_id ? (
         <div style={{ marginTop: 10 }}>
-          <Link
-            href={`/simulation`}
-            style={{ color: "var(--cl-accent)", fontSize: 13 }}
-          >
-            Test related scenario in Simulator →
+          <Link href={`/simulation`} style={{ color: "var(--cl-accent)", fontSize: 13 }}>
+            {t("advisor.testScenario")}
           </Link>
         </div>
       ) : null}
@@ -327,18 +338,25 @@ function ActionCard({
 }
 
 function TimelineRow({ entry }: { entry: TimelineEntry }) {
+  const { t } = useTranslation("ai");
   return (
     <div style={{ ...cardStyle, display: "grid", gap: 4 }}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
         <strong style={{ fontSize: 13 }}>{new Date(entry.generated_at).toLocaleDateString()}</strong>
         <span style={{ fontSize: 12, color: "var(--cl-muted)" }}>
-          {entry.recommendation_count} recommendations
-          {entry.acted_on_demo != null ? (entry.acted_on_demo ? " · acted (demo)" : " · not acted (demo)") : ""}
+          {t("advisor.recommendationsCount", { count: entry.recommendation_count })}
+          {entry.acted_on_demo != null
+            ? entry.acted_on_demo
+              ? t("advisor.actedDemo")
+              : t("advisor.notActedDemo")
+            : ""}
         </span>
       </div>
       <div style={{ fontSize: 13 }}>{entry.summary_excerpt}</div>
       {entry.accuracy_note ? (
-        <div style={{ fontSize: 12, color: "var(--cl-muted)" }}>Accuracy: {entry.accuracy_note}</div>
+        <div style={{ fontSize: 12, color: "var(--cl-muted)" }}>
+          {t("advisor.accuracy", { note: entry.accuracy_note })}
+        </div>
       ) : null}
       {entry.hotspot_realized_note ? (
         <div style={{ fontSize: 12, color: "#f0c674" }}>{entry.hotspot_realized_note}</div>

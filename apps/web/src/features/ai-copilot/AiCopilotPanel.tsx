@@ -1,9 +1,11 @@
 "use client";
 
-import { FormEvent, useState, type CSSProperties } from "react";
+import { FormEvent, useEffect, useState, type CSSProperties } from "react";
 import Link from "next/link";
+import { useTranslation } from "react-i18next";
 
 import { chatSync, type Citation } from "@/features/ai-copilot/api";
+import { useAppLocale } from "@/shared/i18n/useAppLocale";
 
 type ChatMessage = {
   id: string;
@@ -13,26 +15,33 @@ type ChatMessage = {
   tools?: string[];
 };
 
-const SUGGESTIONS = [
-  "Give me a command brief",
-  "Where are the current hotspots?",
-  "Explain top station risk scores",
-  "Who are the repeat offenders?",
-];
+const SUGGESTION_KEYS = ["brief", "hotspots", "riskScores", "repeatOffenders"] as const;
 
 export function AiCopilotPanel() {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "welcome",
-      role: "assistant",
-      content:
-        "CrimeLens grounded copilot. I retrieve predictions, hotspots, and network facts with the same AuthZ as the rest of the API. Ask about risk, hotspots, or network — or request a brief.",
-    },
-  ]);
+  const { t } = useTranslation("ai");
+  const locale = useAppLocale();
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMessages((prev) => {
+      const welcome: ChatMessage = {
+        id: "welcome",
+        role: "assistant",
+        content: t("copilot.welcome"),
+      };
+      if (prev.length === 0 || (prev.length === 1 && prev[0]?.id === "welcome")) {
+        return [welcome];
+      }
+      if (prev[0]?.id === "welcome") {
+        return [welcome, ...prev.slice(1)];
+      }
+      return prev;
+    });
+  }, [locale, t]);
 
   async function send(text: string) {
     const trimmed = text.trim();
@@ -56,11 +65,11 @@ export function AiCopilotPanel() {
           role: "assistant",
           content: res.data.content,
           citations: res.data.citations,
-          tools: res.data.tool_traces.map((t) => t.tool_name),
+          tools: res.data.tool_traces.map((tr) => tr.tool_name),
         },
       ]);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Chat failed");
+      setError(e instanceof Error ? e.message : t("copilot.errorChat"));
     } finally {
       setLoading(false);
     }
@@ -74,10 +83,8 @@ export function AiCopilotPanel() {
   return (
     <div style={{ display: "grid", gap: 16, height: "calc(100vh - 3rem)", gridTemplateRows: "auto 1fr auto" }}>
       <header>
-        <h1 style={{ margin: 0 }}>AI Copilot</h1>
-        <p style={{ margin: "6px 0 0", color: "var(--cl-muted)", fontSize: 14 }}>
-          Grounded tool answers (deterministic). Gemini streaming can replace the composer later.
-        </p>
+        <h1 style={{ margin: 0 }}>{t("copilot.title")}</h1>
+        <p style={{ margin: "6px 0 0", color: "var(--cl-muted)", fontSize: 14 }}>{t("copilot.subtitle")}</p>
       </header>
 
       <div style={transcriptStyle}>
@@ -87,15 +94,14 @@ export function AiCopilotPanel() {
             style={{
               ...bubbleStyle,
               alignSelf: m.role === "user" ? "flex-end" : "flex-start",
-              background:
-                m.role === "user" ? "rgba(61,139,253,0.2)" : "rgba(18, 26, 43, 0.9)",
+              background: m.role === "user" ? "rgba(61,139,253,0.2)" : "rgba(18, 26, 43, 0.9)",
               borderColor: m.role === "user" ? "rgba(61,139,253,0.45)" : "var(--cl-border)",
             }}
           >
             <div style={{ whiteSpace: "pre-wrap", fontSize: 14, lineHeight: 1.55 }}>{m.content}</div>
             {m.tools && m.tools.length > 0 && (
               <div style={{ marginTop: 8, fontSize: 11, color: "var(--cl-muted)" }}>
-                tools: {m.tools.join(", ")}
+                {t("copilot.tools", { list: m.tools.join(", ") })}
               </div>
             )}
             {m.citations && m.citations.length > 0 && (
@@ -115,30 +121,31 @@ export function AiCopilotPanel() {
             )}
           </div>
         ))}
-        {loading && (
-          <div style={{ color: "var(--cl-muted)", fontSize: 13 }}>Retrieving grounded facts…</div>
-        )}
+        {loading && <div style={{ color: "var(--cl-muted)", fontSize: 13 }}>{t("copilot.retrieving")}</div>}
         {error && <div style={{ color: "#ff453a", fontSize: 13 }}>{error}</div>}
       </div>
 
       <div style={{ display: "grid", gap: 10 }}>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-          {SUGGESTIONS.map((s) => (
-            <button key={s} type="button" style={suggestionStyle} onClick={() => void send(s)}>
-              {s}
-            </button>
-          ))}
+          {SUGGESTION_KEYS.map((key) => {
+            const text = t(`copilot.suggestions.${key}`);
+            return (
+              <button key={key} type="button" style={suggestionStyle} onClick={() => void send(text)}>
+                {text}
+              </button>
+            );
+          })}
         </div>
         <form onSubmit={onSubmit} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8 }}>
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about risk, hotspots, network…"
+            placeholder={t("copilot.placeholder")}
             style={inputStyle}
             disabled={loading}
           />
           <button type="submit" disabled={loading || !input.trim()} style={sendStyle}>
-            Send
+            {t("copilot.send")}
           </button>
         </form>
       </div>

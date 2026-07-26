@@ -57,11 +57,15 @@ export function AnalyticsPanel({ embedded = false }: { embedded?: boolean }) {
     };
   }, [locale, t]);
 
+  const current30d = t("charts.current30d");
+  const priorAvg = t("charts.prior30dAvg");
+  const spikeLabel = t("charts.spike");
+
   const compareOption: EChartsOption | null = insights
     ? {
         tooltip: { trigger: "axis" },
         legend: {
-          data: ["Current 30d", "Prior 30d (avg)"],
+          data: [current30d, priorAvg],
           textStyle: { color: "#9aa8c7" },
           top: 0,
         },
@@ -80,7 +84,7 @@ export function AnalyticsPanel({ embedded = false }: { embedded?: boolean }) {
         },
         series: [
           {
-            name: "Current 30d",
+            name: current30d,
             type: "line",
             smooth: true,
             data: insights.daily.map((d) => d.count),
@@ -89,7 +93,7 @@ export function AnalyticsPanel({ embedded = false }: { embedded?: boolean }) {
                   symbol: "pin",
                   symbolSize: 42,
                   data: insights.spikes.slice(0, 3).map((s) => ({
-                    name: "Spike",
+                    name: spikeLabel,
                     coord: [s.date.slice(5), s.count],
                     value: s.count,
                     itemStyle: { color: "#ff453a" },
@@ -101,7 +105,7 @@ export function AnalyticsPanel({ embedded = false }: { embedded?: boolean }) {
             itemStyle: { color: "#3d8bfd" },
           },
           {
-            name: "Prior 30d (avg)",
+            name: priorAvg,
             type: "line",
             data: insights.daily.map(() =>
               insights.daily.length
@@ -177,11 +181,14 @@ export function AnalyticsPanel({ embedded = false }: { embedded?: boolean }) {
         }}
       >
         <Metric
-          label="vs prior 30d"
+          label={t("metrics.vsPrior")}
           value={insights ? `${pct >= 0 ? "+" : ""}${pct}%` : "—"}
           hint={
             insights
-              ? `${insights.current.total} now · ${insights.prior.total} prior`
+              ? t("metrics.nowPrior", {
+                  current: insights.current.total,
+                  prior: insights.prior.total,
+                })
               : loading
                 ? "…"
                 : "—"
@@ -189,21 +196,23 @@ export function AnalyticsPanel({ embedded = false }: { embedded?: boolean }) {
           accent={deltaUp ? "#ff453a" : "#32d74b"}
         />
         <Metric
-          label="Spike days"
+          label={t("metrics.spikeDays")}
           value={insights ? String(insights.spikes.length) : "—"}
-          hint="days above mean+1.5σ"
+          hint={t("metrics.spikeHint")}
           accent="#ff9500"
         />
         <Metric
-          label="Peak hour"
-          value={
-            insights ? `${String(insights.peak_hour.hour).padStart(2, "0")}:00` : "—"
+          label={t("metrics.peakHour")}
+          value={insights ? `${String(insights.peak_hour.hour).padStart(2, "0")}:00` : "—"}
+          hint={
+            insights
+              ? t("metrics.incidentsCount", { count: insights.peak_hour.count })
+              : ""
           }
-          hint={insights ? `${insights.peak_hour.count} incidents` : ""}
           accent="#3d8bfd"
         />
         <Metric
-          label="Top offense share"
+          label={t("metrics.topOffenseShare")}
           value={insights ? `${insights.concentration.top1_share_pct}%` : "—"}
           hint={insights?.concentration.top_offense?.name ?? ""}
           accent="#bf5af2"
@@ -220,13 +229,13 @@ export function AnalyticsPanel({ embedded = false }: { embedded?: boolean }) {
             marginBottom: 10,
           }}
         >
-          <div style={{ fontWeight: 600, fontSize: 14 }}>Analyst findings</div>
+          <div style={{ fontWeight: 600, fontSize: 14 }}>{t("findings.title")}</div>
           <div style={{ fontSize: 12, color: "var(--cl-muted)" }}>
-            Auto-derived from the last {insights?.window_days ?? 30} days
+            {t("findings.autoDerived", { days: insights?.window_days ?? 30 })}
           </div>
         </div>
         {loading && !insights ? (
-          <p style={{ margin: 0, color: "var(--cl-muted)", fontSize: 13 }}>Loading findings…</p>
+          <p style={{ margin: 0, color: "var(--cl-muted)", fontSize: 13 }}>{t("findings.loading")}</p>
         ) : (
           <div style={{ display: "grid", gap: 8 }}>
             {(insights?.findings ?? []).map((f) => (
@@ -244,8 +253,8 @@ export function AnalyticsPanel({ embedded = false }: { embedded?: boolean }) {
             borderTop: "1px solid var(--cl-border)",
           }}
         >
-          <ActionLink href="/advisor">Open Advisor →</ActionLink>
-          <ActionLink href="/map">Map / hotspots →</ActionLink>
+          <ActionLink href="/advisor">{t("actions.advisor")}</ActionLink>
+          <ActionLink href="/map">{t("actions.map")}</ActionLink>
         </div>
       </section>
 
@@ -257,10 +266,7 @@ export function AnalyticsPanel({ embedded = false }: { embedded?: boolean }) {
         }}
         className="cl-dash-two-charts"
       >
-        <Panel
-          title="Period impact — current vs prior"
-          subtitle="Spikes marked · dashed line = prior-period daily average"
-        >
+        <Panel title={t("charts.periodImpactShort")} subtitle={t("charts.periodHint")}>
           {compareOption ? (
             <Chart option={compareOption} height={300} loading={loading} />
           ) : (
@@ -268,10 +274,10 @@ export function AnalyticsPanel({ embedded = false }: { embedded?: boolean }) {
           )}
         </Panel>
         <Panel
-          title="Offense concentration"
+          title={t("charts.offenseConcentration")}
           subtitle={
             insights
-              ? `Top-3 = ${insights.concentration.top3_share_pct}% of volume`
+              ? t("charts.top3", { pct: insights.concentration.top3_share_pct })
               : undefined
           }
         >

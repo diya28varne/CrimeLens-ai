@@ -66,10 +66,10 @@ export function SettingsPanel() {
         if (!cancelled) {
           setError(
             e instanceof ApiError && e.status === 401
-              ? "Sign in required — open /login."
+              ? tc("signInRequiredShort")
               : e instanceof Error
                 ? e.message
-                : "Failed to load profile",
+                : t("errorProfile"),
           );
         }
       } finally {
@@ -79,7 +79,7 @@ export function SettingsPanel() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t, tc]);
 
   function updatePrefs(patch: Partial<Prefs>) {
     const next = { ...prefs, ...patch };
@@ -105,13 +105,19 @@ export function SettingsPanel() {
     })();
   }
 
+  const jurisdictionValue =
+    me && (me.jurisdictions.district_ids.length || me.jurisdictions.station_ids.length)
+      ? t("jurisdictionsCount", {
+          districts: me.jurisdictions.district_ids.length,
+          stations: me.jurisdictions.station_ids.length,
+        })
+      : t("jurisdictionsAll");
+
   return (
     <div style={{ display: "grid", gap: 14, maxWidth: 820 }}>
       <header>
         <h1 style={{ margin: 0, fontSize: 22 }}>{t("title")}</h1>
-        <p style={{ margin: "4px 0 0", color: "var(--cl-muted)", fontSize: 13 }}>
-          {t("subtitle")}
-        </p>
+        <p style={{ margin: "4px 0 0", color: "var(--cl-muted)", fontSize: 13 }}>{t("subtitle")}</p>
       </header>
 
       {error ? <div style={{ color: "#ff8e8e", fontSize: 13 }}>{error}</div> : null}
@@ -121,17 +127,10 @@ export function SettingsPanel() {
         <Section title={t("profile")}>
           <div style={{ display: "grid", gap: 8, fontSize: 14 }}>
             <Row label={t("profile")} value={me.user.full_name} />
-            <Row label="Email" value={me.user.email} />
+            <Row label={t("email")} value={me.user.email} />
             <Row label={tc("status")} value={me.user.status} />
             <Row label={t("roles")} value={me.roles.join(", ") || "—"} />
-            <Row
-              label="Jurisdictions"
-              value={
-                me.jurisdictions.district_ids.length || me.jurisdictions.station_ids.length
-                  ? `${me.jurisdictions.district_ids.length} district(s), ${me.jurisdictions.station_ids.length} station(s)`
-                  : "All (admin / unrestricted)"
-              }
-            />
+            <Row label={t("jurisdictions")} value={jurisdictionValue} />
           </div>
           <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
             <div>
@@ -147,31 +146,31 @@ export function SettingsPanel() {
 
       <Section title={t("preferences")}>
         <p style={{ margin: "0 0 12px", fontSize: 12, color: "var(--cl-muted)" }}>
-          Stored in this browser only (localStorage).
-          {saved ? " · Saved" : ""}
+          {t("prefsStoredLocally")}
+          {saved ? t("savedSuffix") : ""}
         </p>
         <label style={field}>
-          <span>Default report template</span>
+          <span>{t("defaultReport")}</span>
           <select
             value={prefs.defaultReport}
             onChange={(e) => updatePrefs({ defaultReport: e.target.value as Prefs["defaultReport"] })}
             style={input}
           >
-            <option value="daily">Daily Intelligence Brief</option>
-            <option value="weekly">Weekly Crime Analysis</option>
-            <option value="festival">Festival Security Assessment</option>
+            <option value="daily">{t("reportDaily")}</option>
+            <option value="weekly">{t("reportWeekly")}</option>
+            <option value="festival">{t("reportFestival")}</option>
           </select>
         </label>
         <label style={field}>
-          <span>Default map layer</span>
+          <span>{t("mapLayer")}</span>
           <select
             value={prefs.mapLayer}
             onChange={(e) => updatePrefs({ mapLayer: e.target.value as Prefs["mapLayer"] })}
             style={input}
           >
-            <option value="points">Points</option>
-            <option value="heatmap">Heatmap</option>
-            <option value="both">Both</option>
+            <option value="points">{t("layerPoints")}</option>
+            <option value="heatmap">{t("layerHeatmap")}</option>
+            <option value="both">{t("layerBoth")}</option>
           </select>
         </label>
         <label style={checkRow}>
@@ -180,7 +179,7 @@ export function SettingsPanel() {
             checked={prefs.showDisclaimers}
             onChange={(e) => updatePrefs({ showDisclaimers: e.target.checked })}
           />
-          Always show model-estimate disclaimers on AI surfaces
+          {t("showDisclaimersFull")}
         </label>
         <label style={checkRow}>
           <input
@@ -188,29 +187,29 @@ export function SettingsPanel() {
             checked={prefs.denseUi}
             onChange={(e) => updatePrefs({ denseUi: e.target.checked })}
           />
-          Compact spacing (dense console)
+          {t("denseUiFull")}
         </label>
       </Section>
 
-      <Section title="Quick links">
+      <Section title={t("quickLinks")}>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", fontSize: 13 }}>
           <Link href="/reports" style={{ color: "var(--cl-accent)" }}>
-            Reports
+            {tc("nav.reports")}
           </Link>
           <Link href="/explain" style={{ color: "var(--cl-accent)" }}>
-            Explain
+            {tc("nav.explain")}
           </Link>
           <Link href="/advisor" style={{ color: "var(--cl-accent)" }}>
-            Advisor
+            {tc("nav.advisor")}
           </Link>
           <Link href="/simulation" style={{ color: "var(--cl-accent)" }}>
-            Simulation
+            {tc("nav.simulation")}
           </Link>
         </div>
       </Section>
 
       {me ? (
-        <Section title="Your permissions">
+        <Section title={t("yourPermissions")}>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             {me.permissions.map((p) => (
               <span key={p} style={chip}>
