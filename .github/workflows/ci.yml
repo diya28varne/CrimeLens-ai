@@ -14,7 +14,8 @@ jobs:
         with:
           python-version: "3.12"
       - name: Sync workspace
-        run: uv sync --all-packages
+        # Install workspace packages + default `dev` dependency groups (pytest, etc.)
+        run: uv sync --all-packages --group dev
       - name: Domain tests
         run: uv run --package crimelens-domain pytest packages/py-domain/tests -q
       - name: API unit tests
