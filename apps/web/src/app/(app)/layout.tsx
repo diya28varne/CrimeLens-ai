@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import { LanguageSwitcher } from "@/shared/i18n/LanguageSwitcher";
-import { KarnatakaPoliceEmblem } from "@/shared/ui/KarnatakaPoliceEmblem";
+import { KspLogo } from "@/shared/ui/KspLogo";
 
 const NAV_ITEMS: Array<{ href: string; key: string }> = [
   { href: "/dashboard", key: "nav.dashboard" },
@@ -41,7 +41,7 @@ export default function AppShellLayout({ children }: { children: ReactNode }) {
         }}
       >
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <KarnatakaPoliceEmblem size={40} />
+          <KspLogo size={48} />
           <div>
             <div style={{ fontSize: 12, color: "#f5d76e", fontWeight: 700, letterSpacing: 0.3 }}>
               {t("govBadge")}
@@ -106,7 +106,7 @@ export default function AppShellLayout({ children }: { children: ReactNode }) {
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 16, minWidth: 0 }}>
-            <KarnatakaPoliceEmblem size={58} />
+            <KspLogo size={64} priority />
             <div style={{ minWidth: 0 }}>
               <div
                 style={{

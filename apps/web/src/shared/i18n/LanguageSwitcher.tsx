@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 
 import { setAppLocale } from "@/shared/i18n/setLocale";
 import { LOCALES, type AppLocale } from "@/shared/i18n";
-import { KarnatakaPoliceEmblem } from "@/shared/ui/KarnatakaPoliceEmblem";
+import { KspLogo } from "@/shared/ui/KspLogo";
 
 export function LanguageSwitcher({
   compact = false,
@@ -45,7 +45,7 @@ export function LanguageSwitcher({
         style={emphasize ? emphasizeTriggerStyle : big ? triggerStyle : compactTriggerStyle}
       >
         {emphasize ? (
-          <KarnatakaPoliceEmblem size={34} />
+          <KspLogo size={36} />
         ) : (
           <span aria-hidden style={{ fontSize: big ? 18 : 15 }}>
             🌐
