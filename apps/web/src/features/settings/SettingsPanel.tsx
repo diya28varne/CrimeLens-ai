@@ -5,6 +5,8 @@ import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 
 import { apiFetch, ApiError } from "@/shared/api/client";
 import { clearAccessToken } from "@/shared/lib/auth-storage";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/shared/i18n/LanguageSwitcher";
 
 type MeData = {
   user: { id: string; email: string; full_name: string; status: string };
@@ -45,6 +47,8 @@ function savePrefs(p: Prefs) {
 }
 
 export function SettingsPanel() {
+  const { t } = useTranslation("settings");
+  const { t: tc } = useTranslation("common");
   const [me, setMe] = useState<MeData | null>(null);
   const [prefs, setPrefs] = useState<Prefs>(DEFAULT_PREFS);
   const [saved, setSaved] = useState(false);
@@ -93,22 +97,22 @@ export function SettingsPanel() {
   return (
     <div style={{ display: "grid", gap: 14, maxWidth: 820 }}>
       <header>
-        <h1 style={{ margin: 0, fontSize: 22 }}>Settings</h1>
+        <h1 style={{ margin: 0, fontSize: 22 }}>{t("title")}</h1>
         <p style={{ margin: "4px 0 0", color: "var(--cl-muted)", fontSize: 13 }}>
-          Profile, jurisdiction scope, and console preferences.
+          {t("subtitle")}
         </p>
       </header>
 
       {error ? <div style={{ color: "#ff8e8e", fontSize: 13 }}>{error}</div> : null}
-      {loading ? <div style={{ color: "var(--cl-muted)" }}>Loading…</div> : null}
+      {loading ? <div style={{ color: "var(--cl-muted)" }}>{tc("loading")}</div> : null}
 
       {me ? (
-        <Section title="Signed-in profile">
+        <Section title={t("profile")}>
           <div style={{ display: "grid", gap: 8, fontSize: 14 }}>
-            <Row label="Name" value={me.user.full_name} />
+            <Row label={t("profile")} value={me.user.full_name} />
             <Row label="Email" value={me.user.email} />
-            <Row label="Status" value={me.user.status} />
-            <Row label="Roles" value={me.roles.join(", ") || "—"} />
+            <Row label={tc("status")} value={me.user.status} />
+            <Row label={t("roles")} value={me.roles.join(", ") || "—"} />
             <Row
               label="Jurisdictions"
               value={
@@ -118,18 +122,22 @@ export function SettingsPanel() {
               }
             />
           </div>
-          <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            <div>
+              <div style={{ fontSize: 12, color: "var(--cl-muted)", marginBottom: 6 }}>{t("language")}</div>
+              <LanguageSwitcher />
+            </div>
             <button type="button" onClick={signOut} style={primaryBtn}>
-              Sign out
+              {t("signOut")}
             </button>
             <Link href="/admin" style={ghostLink}>
-              Open Admin
+              {t("admin.title")}
             </Link>
           </div>
         </Section>
       ) : null}
 
-      <Section title="Console preferences">
+      <Section title={t("preferences")}>
         <p style={{ margin: "0 0 12px", fontSize: 12, color: "var(--cl-muted)" }}>
           Stored in this browser only (localStorage).
           {saved ? " · Saved" : ""}

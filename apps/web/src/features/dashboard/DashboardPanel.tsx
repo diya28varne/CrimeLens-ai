@@ -11,8 +11,11 @@ import {
   type DashboardOverview,
 } from "@/features/dashboard/api";
 import { Chart } from "@/shared/ui/Chart";
+import { useTranslation } from "react-i18next";
 
 export function DashboardPanel() {
+  const { t } = useTranslation("dashboard");
+  const { t: tc } = useTranslation("common");
   const [overview, setOverview] = useState<DashboardOverview | null>(null);
   const [alerts, setAlerts] = useState<DashboardAlert[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +37,7 @@ export function DashboardPanel() {
         }
       } catch (e) {
         if (!cancelled) {
-          setError(e instanceof Error ? e.message : "Failed to load dashboard");
+          setError(e instanceof Error ? e.message : t("errorLoad"));
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -43,7 +46,7 @@ export function DashboardPanel() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
   const trendOption: EChartsOption | null = overview
     ? {
@@ -120,23 +123,22 @@ export function DashboardPanel() {
   return (
     <div style={{ display: "grid", gap: 16 }}>
       <header>
-        <h1 style={{ margin: 0 }}>Dashboard</h1>
+        <h1 style={{ margin: 0 }}>{t("title")}</h1>
         <p style={{ margin: "6px 0 0", color: "var(--cl-muted)", fontSize: 14 }}>
-          Ops at a glance — live KPIs and alerts. For period impact, spikes, and
-          socio drivers use{" "}
+          {t("subtitle")}{" "}
           <Link href="/analytics" style={{ color: "var(--cl-accent)" }}>
-            Analytics
+            {t("linkAnalytics")}
           </Link>
           .{" "}
           <Link href="/map" style={{ color: "var(--cl-accent)" }}>
-            Map
+            {t("linkMap")}
           </Link>
         </p>
       </header>
 
       {error && (
         <div style={bannerStyle("#ff453a")}>
-          {error}. Sign in if needed — dashboard requires analytics read.
+          {error}. {tc("signIn")} — analytics read.
         </div>
       )}
 
@@ -148,17 +150,17 @@ export function DashboardPanel() {
         }}
       >
         <Kpi
-          label="Total incidents"
+          label={t("kpi.totalIncidents")}
           value={overview?.kpis.total_incidents}
           delta={overview?.kpis.total_incidents_delta_pct}
           loading={loading}
         />
-        <Kpi label="Open cases" value={overview?.kpis.open_incidents} loading={loading} />
-        <Kpi label="High / critical" value={overview?.kpis.high_severity} loading={loading} />
+        <Kpi label={t("kpi.openCases")} value={overview?.kpis.open_incidents} loading={loading} />
+        <Kpi label={t("kpi.highCritical")} value={overview?.kpis.high_severity} loading={loading} />
         <Kpi
-          label="Hotspots"
+          label={t("kpi.hotspots")}
           value={overview?.kpis.hotspot_count}
-          hint="Prediction module"
+          hint={t("charts.trend30d")}
           loading={loading}
         />
       </div>
@@ -171,14 +173,14 @@ export function DashboardPanel() {
         }}
         className="cl-dash-charts"
       >
-        <Panel title="Daily trend">
-          {trendOption ? <Chart option={trendOption} height={260} loading={loading} /> : <Empty />}
+        <Panel title={t("charts.trend30d")}>
+          {trendOption ? <Chart option={trendOption} height={260} loading={loading} /> : <Empty label={tc("noData")} />}
         </Panel>
-        <Panel title="By severity">
+        <Panel title={t("charts.severityMix")}>
           {severityOption ? (
             <Chart option={severityOption} height={260} loading={loading} />
           ) : (
-            <Empty />
+            <Empty label={tc("noData")} />
           )}
         </Panel>
       </div>
@@ -190,14 +192,14 @@ export function DashboardPanel() {
           gap: 12,
         }}
       >
-        <Panel title="Top offenses">
+        <Panel title={t("charts.topOffenses")}>
           {offenseOption ? (
             <Chart option={offenseOption} height={240} loading={loading} />
           ) : (
-            <Empty />
+            <Empty label={tc("noData")} />
           )}
         </Panel>
-        <Panel title="Alerts">
+        <Panel title={t("alerts.title")}>
           <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 10 }}>
             {alerts.map((a) => (
               <li key={a.id} style={alertItemStyle(a.severity)}>
@@ -205,12 +207,12 @@ export function DashboardPanel() {
                 <div style={{ color: "var(--cl-muted)", fontSize: 13, marginTop: 4 }}>{a.body}</div>
                 {a.href && (
                   <Link href={a.href} style={{ color: "var(--cl-accent)", fontSize: 12 }}>
-                    Investigate →
+                    {t("alerts.view")} →
                   </Link>
                 )}
               </li>
             ))}
-            {!loading && alerts.length === 0 && <Empty />}
+            {!loading && alerts.length === 0 && <Empty label={t("alerts.empty")} />}
           </ul>
         </Panel>
       </div>
@@ -271,10 +273,10 @@ function Panel({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function Empty() {
+function Empty({ label = "—" }: { label?: string }) {
   return (
     <div style={{ color: "var(--cl-muted)", fontSize: 13, padding: "2rem 0", textAlign: "center" }}>
-      No data in window
+      {label}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { appConfig } from "@/shared/config";
 import { getAccessToken } from "@/shared/lib/auth-storage";
+import { readStoredLocale } from "@/shared/i18n";
 
 export class ApiError extends Error {
   status: number;
@@ -9,6 +10,15 @@ export class ApiError extends Error {
     super(message);
     this.status = status;
     this.code = code;
+  }
+}
+
+function currentLocale(): string {
+  if (typeof window === "undefined") return "en";
+  try {
+    return readStoredLocale();
+  } catch {
+    return "en";
   }
 }
 
@@ -24,6 +34,12 @@ export async function apiFetch<T>(
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
   }
+  const locale = currentLocale();
+  headers.set(
+    "Accept-Language",
+    locale === "kn" ? "kn-IN,kn;q=0.9,en;q=0.5" : "en-IN,en;q=0.9",
+  );
+  headers.set("X-CrimeLens-Locale", locale);
 
   const response = await fetch(`${appConfig.apiBaseUrl}${path}`, {
     ...init,

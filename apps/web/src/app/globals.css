@@ -22,7 +22,24 @@ body {
     radial-gradient(900px 500px at 90% 0%, rgba(31, 111, 235, 0.12), transparent 55%),
     var(--cl-bg);
   color: var(--cl-text);
-  font-family: "Segoe UI", "IBM Plex Sans", "Helvetica Neue", sans-serif;
+  font-family:
+    var(--font-noto-sans),
+    var(--font-noto-kannada),
+    "Noto Sans Kannada",
+    "Segoe UI",
+    "IBM Plex Sans",
+    "Helvetica Neue",
+    sans-serif;
+}
+
+html[lang="kn"] body {
+  font-family:
+    var(--font-noto-kannada),
+    var(--font-noto-sans),
+    "Noto Sans Kannada",
+    "Segoe UI",
+    sans-serif;
+  line-height: 1.55;
 }
 
 @media print {

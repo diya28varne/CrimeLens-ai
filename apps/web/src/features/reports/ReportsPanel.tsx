@@ -12,8 +12,12 @@ import {
 } from "@/features/reports/api";
 import { Chart } from "@/shared/ui/Chart";
 import { ApiError } from "@/shared/api/client";
+import { useTranslation } from "react-i18next";
+import { useAppLocale } from "@/shared/i18n/useAppLocale";
 
 export function ReportsPanel() {
+  const { t } = useTranslation("reports");
+  const locale = useAppLocale();
   const [templates, setTemplates] = useState<ReportTemplate[]>([]);
   const [templateId, setTemplateId] = useState("weekly");
   const [report, setReport] = useState<IntelligenceReport | null>(null);
@@ -54,12 +58,12 @@ export function ReportsPanel() {
     setError(null);
     setPresenting(false);
     try {
-      const res = await generateReport({ template_id: templateId });
+      const res = await generateReport({ template_id: templateId, locale });
       setReport(res.data);
       setChecked({});
       setSlide(0);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to generate report");
+      setError(e instanceof Error ? e.message : t("errorLoad"));
     } finally {
       setLoading(false);
     }
@@ -116,23 +120,23 @@ export function ReportsPanel() {
     <div style={{ display: "grid", gap: 14, maxWidth: 980 }}>
       <header className="no-print" style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 22 }}>Executive Intelligence Reports</h1>
+          <h1 style={{ margin: 0, fontSize: 22 }}>{t("title")}</h1>
           <p style={{ margin: "4px 0 0", color: "var(--cl-muted)", fontSize: 13 }}>
-            From data to decisions in one click — grounded briefing for command meetings.
+            {t("subtitle")} {t("languageNote")}
           </p>
         </div>
       </header>
 
       <section className="no-print" style={panelStyle}>
-        <div style={sectionTitle}>Report builder</div>
+        <div style={sectionTitle}>{t("template")}</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 10 }}>
-          {templates.map((t) => {
-            const on = templateId === t.id;
+          {templates.map((tmpl) => {
+            const on = templateId === tmpl.id;
             return (
               <button
-                key={t.id}
+                key={tmpl.id}
                 type="button"
-                onClick={() => setTemplateId(t.id)}
+                onClick={() => setTemplateId(tmpl.id)}
                 style={{
                   textAlign: "left",
                   padding: 12,
@@ -143,20 +147,20 @@ export function ReportsPanel() {
                   cursor: "pointer",
                 }}
               >
-                <div style={{ fontWeight: 600, fontSize: 14 }}>{t.name}</div>
-                <div style={{ fontSize: 12, color: "var(--cl-muted)", marginTop: 4 }}>{t.description}</div>
+                <div style={{ fontWeight: 600, fontSize: 14 }}>{tmpl.name}</div>
+                <div style={{ fontSize: 12, color: "var(--cl-muted)", marginTop: 4 }}>{tmpl.description}</div>
               </button>
             );
           })}
         </div>
         <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
           <button type="button" onClick={() => void onGenerate()} disabled={loading} style={primaryBtn}>
-            {loading ? "Generating…" : "Generate Report"}
+            {loading ? t("generating") : t("generate")}
           </button>
           {report ? (
             <>
               <button type="button" onClick={() => window.print()} style={ghostBtn}>
-                Print / Save PDF
+                {t("print")}
               </button>
               <button
                 type="button"
@@ -166,7 +170,7 @@ export function ReportsPanel() {
                 }}
                 style={ghostBtn}
               >
-                Present Report
+                {t("present")}
               </button>
             </>
           ) : null}

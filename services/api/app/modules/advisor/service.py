@@ -25,7 +25,9 @@ from app.modules.advisor.schemas import (
     TimelineEntryOut,
 )
 
-DISCLAIMER = (
+from app.core.i18n import t as i18n_t
+
+DISCLAIMER_EN = (
     "Intelligence briefing grounded in CrimeLens analytics, predictions, and network data. "
     "Observed = measured from incidents; Forecast = model estimates. Not operational orders."
 )
@@ -283,7 +285,7 @@ class AdvisorService:
             actions=actions[:5],
             timeline=[],
             sources=sources,
-            disclaimer=DISCLAIMER,
+            disclaimer=i18n_t("disclaimer_advisor", "en"),
             confidence=round(conf, 2),
         )
 

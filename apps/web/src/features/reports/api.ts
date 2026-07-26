@@ -79,6 +79,8 @@ export async function generateReport(body: {
   template_id: string;
   from?: string;
   to?: string;
+  locale?: "en" | "kn";
+  bilingual?: boolean;
 }) {
   return apiFetch<{ data: IntelligenceReport }>("/reports/generate", {
     method: "POST",

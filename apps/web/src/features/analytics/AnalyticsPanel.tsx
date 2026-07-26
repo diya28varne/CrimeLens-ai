@@ -16,6 +16,8 @@ import {
   type CorrelationSummary,
 } from "@/features/analytics/api";
 import { Chart } from "@/shared/ui/Chart";
+import { useTranslation } from "react-i18next";
+import { useAppLocale } from "@/shared/i18n/useAppLocale";
 
 const INDICATORS = [
   { code: "unemployment_rate", label: "Unemployment rate" },
@@ -32,6 +34,8 @@ const SEV_COLOR: Record<string, string> = {
 };
 
 export function AnalyticsPanel() {
+  const { t } = useTranslation("analytics");
+  const locale = useAppLocale();
   const [indicator, setIndicator] = useState("unemployment_rate");
   const [insights, setInsights] = useState<AnalyticsInsights | null>(null);
   const [offense, setOffense] = useState<BreakdownItem[]>([]);
@@ -63,7 +67,7 @@ export function AnalyticsPanel() {
         }
       } catch (e) {
         if (!cancelled) {
-          setError(e instanceof Error ? e.message : "Failed to load analytics");
+          setError(e instanceof Error ? e.message : t("errorLoad"));
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -72,7 +76,7 @@ export function AnalyticsPanel() {
     return () => {
       cancelled = true;
     };
-  }, [indicator]);
+  }, [indicator, locale, t]);
 
   const hourOption: EChartsOption = {
     tooltip: { trigger: "axis" },
@@ -300,15 +304,13 @@ export function AnalyticsPanel() {
     <div style={{ display: "grid", gap: 16 }}>
       <header style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "end" }}>
         <div style={{ flex: 1, minWidth: 260 }}>
-          <h1 style={{ margin: 0 }}>Analytics</h1>
+          <h1 style={{ margin: 0 }}>{t("title")}</h1>
           <p style={{ margin: "6px 0 0", color: "var(--cl-muted)", fontSize: 14, maxWidth: 560 }}>
-            Deep analysis — period impact, temporal patterns, offense concentration, and
-            socio-economic drivers. Dashboard is for ops glance; this page answers{" "}
-            <em>why</em> and <em>where to act</em>.
+            {t("subtitle")}
           </p>
         </div>
         <label style={{ display: "grid", gap: 4, fontSize: 12, color: "var(--cl-muted)" }}>
-          Socio indicator
+          {t("socioIndicator")}
           <select
             value={indicator}
             onChange={(e) => setIndicator(e.target.value)}
@@ -316,7 +318,7 @@ export function AnalyticsPanel() {
           >
             {INDICATORS.map((i) => (
               <option key={i.code} value={i.code}>
-                {i.label}
+                {t(`indicators.${i.code}`)}
               </option>
             ))}
           </select>

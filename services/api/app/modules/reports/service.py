@@ -31,6 +31,7 @@ from app.modules.reports.schemas import (
     ResourcePlanOut,
     XaiSummaryOut,
 )
+from app.core.i18n import normalize_locale, t, translate_action_title
 
 DISCLAIMER = (
     "Intelligence report assembled from CrimeLens analytics, predictions, and explanations. "
@@ -80,14 +81,32 @@ class ReportsService:
         self._advisor = AdvisorService(session)
         self._explain = ExplainService(session)
 
-    def list_templates(self) -> list[ReportTemplateOut]:
-        return list(TEMPLATES)
+    def list_templates(self, locale: str = "en") -> list[ReportTemplateOut]:
+        loc = normalize_locale(locale)
+        out: list[ReportTemplateOut] = []
+        for tmpl in TEMPLATES:
+            out.append(
+                ReportTemplateOut(
+                    id=tmpl.id,
+                    name=t(f"template_{tmpl.id}", loc),
+                    description=tmpl.description if loc == "en" else tmpl.description,
+                    default_days=tmpl.default_days,
+                )
+            )
+        return out
 
     def get_cached(self, report_id: str) -> IntelligenceReportData | None:
         return _REPORT_CACHE.get(report_id)
 
     async def generate(self, ctx: AuthContext, body: GenerateReportRequest) -> IntelligenceReportData:
-        tmpl = next((t for t in TEMPLATES if t.id == body.template_id), TEMPLATES[1])
+        locale = normalize_locale(body.locale)
+        tmpl = next((t0 for t0 in TEMPLATES if t0.id == body.template_id), TEMPLATES[1])
+        tmpl_localized = ReportTemplateOut(
+            id=tmpl.id,
+            name=t(f"template_{tmpl.id}", locale),
+            description=tmpl.description,
+            default_days=tmpl.default_days,
+        )
         now = datetime.now(UTC)
         to_d = body.to or now.date()
         from_d = body.from_ or (to_d - timedelta(days=tmpl.default_days))
@@ -263,65 +282,110 @@ class ReportsService:
             ChecklistItemOut(id="c5", text="Brief control room on 19:00–22:00 watch block"),
         ]
 
+        # Localize recommendation titles for selected report language
+        recommendations = [
+            RecommendationOut(
+                title=translate_action_title(r.title, locale),
+                rationale=r.rationale,
+                confidence=r.confidence,
+                priority=r.priority,
+            )
+            for r in recommendations
+        ]
+        if recommendations:
+            checklist[0] = ChecklistItemOut(id="c1", text=recommendations[0].title)
+
         cover = CoverOut(
             title="CrimeLens AI",
-            subtitle="AI-Powered Crime Intelligence Report",
-            prepared_for="Karnataka State Police",
-            classification="Internal Intelligence Brief",
-            report_type=tmpl.name,
+            subtitle=t("report_subtitle", locale),
+            prepared_for=t("prepared_for", locale),
+            classification=t("classification", locale),
+            report_type=tmpl_localized.name,
             date_label=to_d.strftime("%B %Y"),
             range_label=f"{from_d.isoformat()} → {to_d.isoformat()}",
             generated_at=now,
         )
 
+        if locale == "en":
+            cover_narr = (
+                f"This is the {tmpl_localized.name} for {cover.range_label}, prepared for Karnataka State Police "
+                "as an internal intelligence brief."
+            )
+            overview_narr = (
+                f"Observed: {overview.kpis.total_incidents} incidents in the selected window, "
+                f"with {overview.kpis.high_severity} high or critical severity cases."
+            )
+            hotspot_narr = (
+                f"Forecast and detection highlight {len(hotspot_rows)} priority locations, led by "
+                f"{hotspot_rows[0].label}."
+                if hotspot_rows
+                else "No hotspot features in the current run."
+            )
+            pred_narr = (
+                f"Top forecast risk is {predictions[0].scope_name} at "
+                f"{predictions[0].risk_score * 100:.0f}% score with {predictions[0].confidence * 100:.0f}% confidence."
+                if predictions
+                else "No current prediction values available."
+            )
+            check_narr = "Close with the immediate action checklist so the briefing ends on decisions, not just data."
+        else:
+            cover_narr = (
+                f"ಇದು {cover.range_label} ಅವಧಿಗೆ {tmpl_localized.name}. "
+                "ಕರ್ನಾಟಕ ರಾಜ್ಯ ಪೊಲೀಸ್‌ಗಾಗಿ ಆಂತರಿಕ ಬುದ್ಧಿವಂತಿಕೆ ಬ್ರೀಫ್."
+            )
+            overview_narr = (
+                f"ಗಮನಿಸಿದ: ಆಯ್ದ ಅವಧಿಯಲ್ಲಿ {overview.kpis.total_incidents} ಘಟನೆಗಳು, "
+                f"ಅಧಿಕ/ಗಂಭೀರ {overview.kpis.high_severity}."
+            )
+            hotspot_narr = (
+                f"ಭವಿಷ್ಯವಾಣಿ/ಪತ್ತೆ {len(hotspot_rows)} ಆದ್ಯತಾ ಸ್ಥಳಗಳನ್ನು ಗುರುತಿಸುತ್ತದೆ — {hotspot_rows[0].label}."
+                if hotspot_rows
+                else "ಪ್ರಸ್ತುತ ರನ್‌ನಲ್ಲಿ ಹಾಟ್‌ಸ್ಪಾಟ್ ಲಕ್ಷಣಗಳಿಲ್ಲ."
+            )
+            pred_narr = (
+                f"ಅತ್ಯಧಿಕ ಭವಿಷ್ಯವಾಣಿ ಅಪಾಯ: {predictions[0].scope_name} "
+                f"({predictions[0].risk_score * 100:.0f}% ಅಂಕ, {predictions[0].confidence * 100:.0f}% ವಿಶ್ವಾಸ)."
+                if predictions
+                else "ಪ್ರಸ್ತುತ ಭವಿಷ್ಯವಾಣಿ ಮೌಲ್ಯಗಳಿಲ್ಲ."
+            )
+            check_narr = (
+                "ತಕ್ಷಣದ ಕ್ರಮ ಪರಿಶೀಲನಾ ಪಟ್ಟಿಯೊಂದಿಗೆ ಮುಕ್ತಾಯ — ಬ್ರೀಫಿಂಗ್ ಡೇಟಾ ಅಲ್ಲ, ನಿರ್ಧಾರಗಳಲ್ಲಿ ಕೊನೆಗೊಳ್ಳಬೇಕು."
+            )
+
         presenter = [
             PresenterSlideOut(
                 section_id="cover",
-                title="Cover",
-                narration=(
-                    f"This is the {tmpl.name} for {cover.range_label}, prepared for Karnataka State Police "
-                    "as an internal intelligence brief."
-                ),
+                title=t("section_cover", locale),
+                narration=cover_narr,
                 drill_href=None,
             ),
             PresenterSlideOut(
                 section_id="executive",
-                title="Executive Summary",
+                title=t("section_exec", locale),
                 narration=exec_summary[:500],
                 drill_href="/advisor",
             ),
             PresenterSlideOut(
                 section_id="overview",
-                title="Crime Overview",
-                narration=(
-                    f"Observed: {overview.kpis.total_incidents} incidents in the selected window, "
-                    f"with {overview.kpis.high_severity} high or critical severity cases."
-                ),
+                title=t("section_overview", locale),
+                narration=overview_narr,
                 drill_href="/dashboard",
             ),
             PresenterSlideOut(
                 section_id="hotspots",
-                title="Hotspot Analysis",
-                narration=(
-                    f"Forecast and detection highlight {len(hotspot_rows)} priority locations, led by "
-                    f"{hotspot_rows[0].label}." if hotspot_rows else "No hotspot features in the current run."
-                ),
+                title=t("section_hotspot", locale),
+                narration=hotspot_narr,
                 drill_href="/prediction",
             ),
             PresenterSlideOut(
                 section_id="predictions",
-                title="Predictions",
-                narration=(
-                    f"Top forecast risk is {predictions[0].scope_name} at "
-                    f"{predictions[0].risk_score * 100:.0f}% score with {predictions[0].confidence * 100:.0f}% confidence."
-                    if predictions
-                    else "No current prediction values available."
-                ),
+                title=t("section_pred", locale),
+                narration=pred_narr,
                 drill_href="/explain",
             ),
             PresenterSlideOut(
                 section_id="recommendations",
-                title="Operational Recommendations",
+                title=t("section_rec", locale),
                 narration=(
                     recommendations[0].title + ". " + recommendations[0].rationale
                     if recommendations
@@ -331,8 +395,8 @@ class ReportsService:
             ),
             PresenterSlideOut(
                 section_id="checklist",
-                title="Action Checklist",
-                narration="Close with the immediate action checklist so the briefing ends on decisions, not just data.",
+                title=t("section_check", locale),
+                narration=check_narr,
                 drill_href="/reports",
             ),
         ]
@@ -365,8 +429,9 @@ class ReportsService:
                 {"type": "predictions", "run_id": str(pred.run.id) if pred.run else None},
                 {"type": "hotspots", "run_id": str(hotspots.run.id) if hotspots.run else None},
                 {"type": "advisor_brief", "id": advisor.id},
+                {"type": "locale", "value": locale, "bilingual_requested": body.bilingual},
             ],
-            disclaimer=DISCLAIMER,
+            disclaimer=t("disclaimer_reports", locale),
             generated_at=now,
         )
         _REPORT_CACHE[report.id] = report

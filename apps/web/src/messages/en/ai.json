@@ -1,0 +1,74 @@
+{
+  "advisor": {
+    "title": "Strategic Intelligence Advisor",
+    "subtitle": "Grounded briefing from analytics, predictions, and network signals.",
+    "refresh": "Refresh brief",
+    "recommendations": "Recommended actions",
+    "riskAreas": "Risk areas",
+    "patterns": "Patterns",
+    "evidence": "Evidence",
+    "disclaimer": "Observed = measured; Forecast = model estimates. Not operational orders.",
+    "errorLoad": "Failed to load advisor brief"
+  },
+  "explain": {
+    "title": "Explainable AI Decision Engine",
+    "subtitle": "Decision cards with feature contributions and audit trail.",
+    "factors": "Contributing factors",
+    "confidence": "Confidence",
+    "similar": "Similar cases",
+    "whatIf": "What-if",
+    "audit": "Audit trail",
+    "disclaimer": "Factors are model estimates — not proof of causation.",
+    "errorLoad": "Failed to load explanation"
+  },
+  "prediction": {
+    "title": "Crime Risk Prediction",
+    "subtitle": "Forward-looking risk scores for deployment planning.",
+    "currentRun": "Current model run",
+    "hotspots": "Hotspots",
+    "explanation": "Explanation",
+    "riskScore": "Risk score",
+    "errorLoad": "Failed to load predictions"
+  },
+  "simulation": {
+    "title": "Digital Twin Simulator",
+    "subtitle": "What-if overlays on current risk and hotspot layers.",
+    "run": "Run simulation",
+    "controls": "Scenario controls",
+    "metrics": "Impact metrics",
+    "errorLoad": "Failed to run simulation"
+  },
+  "story": {
+    "title": "Crime Story Playback",
+    "subtitle": "Temporal reconstruction for investigative review.",
+    "play": "Play",
+    "pause": "Pause",
+    "timeline": "Timeline",
+    "errorLoad": "Failed to load story"
+  },
+  "copilot": {
+    "title": "AI Copilot",
+    "subtitle": "Ask grounded questions over authorized CrimeLens data.",
+    "placeholder": "Ask about risk, hotspots, or recommendations…",
+    "send": "Send",
+    "errorLoad": "Copilot request failed"
+  },
+  "map": {
+    "title": "Crime Map",
+    "subtitle": "Geospatial intelligence — points, heat, and district drill-down.",
+    "legend": "Legend",
+    "layers": "Layers",
+    "heatmap": "Heatmap",
+    "points": "Incidents",
+    "risk": "Risk",
+    "filters": "Filters",
+    "popupRisk": "Risk level",
+    "popupCount": "Incidents",
+    "errorLoad": "Failed to load map data"
+  },
+  "network": {
+    "title": "Network Analysis",
+    "subtitle": "Link analysis and repeat-offender oriented exploration.",
+    "errorLoad": "Failed to load network"
+  }
+}

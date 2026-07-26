@@ -14,8 +14,12 @@ import {
   type TimelineEntry,
 } from "@/features/advisor/api";
 import { ApiError } from "@/shared/api/client";
+import { useTranslation } from "react-i18next";
+import { useAppLocale } from "@/shared/i18n/useAppLocale";
 
 export function AdvisorPanel() {
+  const { t } = useTranslation("ai");
+  const locale = useAppLocale();
   const [brief, setBrief] = useState<AdvisorBrief | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -32,20 +36,20 @@ export function AdvisorPanel() {
     } catch (e) {
       setError(
         e instanceof ApiError && e.status === 401
-          ? "Sign in required — open /login with seeded admin credentials."
+          ? t("advisor.errorLoad")
           : e instanceof Error
             ? e.message
-            : "Failed to load intelligence brief",
+            : t("advisor.errorLoad"),
       );
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void load("current");
-  }, [load]);
+  }, [load, locale]);
 
   function toggle(id: string) {
     setOpenId((prev) => (prev === id ? null : id));
@@ -55,14 +59,14 @@ export function AdvisorPanel() {
     <div style={{ display: "grid", gap: 14, maxWidth: 1100 }}>
       <header style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 22 }}>Strategic Intelligence Advisor</h1>
+          <h1 style={{ margin: 0, fontSize: 22 }}>{t("advisor.title")}</h1>
           <p style={{ margin: "4px 0 0", color: "var(--cl-muted)", fontSize: 13 }}>
-            Daily briefing — what’s happening, why it matters, what to consider next.
+            {t("advisor.subtitle")}
           </p>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <button type="button" onClick={() => void load("refresh")} disabled={refreshing} style={btnStyle}>
-            {refreshing ? "Refreshing…" : "Refresh brief"}
+            {refreshing ? "…" : t("advisor.refresh")}
           </button>
           <Link href="/ai" style={{ ...btnStyle, textDecoration: "none", display: "inline-block" }}>
             Ask Copilot

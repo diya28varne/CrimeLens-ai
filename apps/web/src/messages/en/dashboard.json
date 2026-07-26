@@ -1,0 +1,26 @@
+{
+  "title": "Dashboard",
+  "subtitle": "Ops at a glance — live KPIs and alerts. For period impact, spikes, and socio drivers use Analytics.",
+  "linkAnalytics": "Analytics",
+  "linkMap": "Map",
+  "kpi": {
+    "totalIncidents": "Total incidents",
+    "openCases": "Open cases",
+    "highCritical": "High / critical",
+    "hotspots": "Active hotspots",
+    "delta": "{{value}}% vs prior window"
+  },
+  "charts": {
+    "trend30d": "Incident trend (30 days)",
+    "severityMix": "Severity mix",
+    "topOffenses": "Top offenses",
+    "incidents": "Incidents",
+    "count": "Count"
+  },
+  "alerts": {
+    "title": "Alerts",
+    "empty": "No active alerts",
+    "view": "View"
+  },
+  "errorLoad": "Failed to load dashboard"
+}

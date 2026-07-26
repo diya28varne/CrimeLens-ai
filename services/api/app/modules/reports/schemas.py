@@ -26,6 +26,8 @@ class GenerateReportRequest(BaseModel):
     to: date | None = None
     district_id: UUID | None = None
     offense_codes: list[str] = Field(default_factory=list)
+    locale: Literal["en", "kn"] = "en"
+    bilingual: bool = False  # future-ready EN+KN export flag
 
     model_config = {"populate_by_name": True}
 

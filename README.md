@@ -25,6 +25,7 @@ CrimeLens turns incident, geospatial, network, and socio-economic data into oper
 - [Documentation](#documentation)
 - [Security & responsible use](#security--responsible-use)
 - [Project status](#project-status)
+- [Multilingual (EN / ಕನ್ನಡ)](#multilingual-en--ಕನ್ನಡ)
 
 ---
 
@@ -432,8 +433,21 @@ Then rotate every secret that lived in that file. If the secret was pushed to a 
 | Prediction & network modules | Live |
 | Flagship features 1–5 | Live (P1) |
 | Settings & Admin panels | Live |
+| Multilingual EN / ಕನ್ನಡ | Live (react-i18next) |
 
 Current API version is published in OpenAPI (`info.version`) when the stack is running.
+
+---
+
+## Multilingual (EN / ಕನ್ನಡ)
+
+CrimeLens includes an enterprise i18n layer (**not** Google/browser translate).
+
+- Switcher in sidebar + top bar — instant, no page reload
+- Preference persisted (`localStorage` + cookie `cl_locale`)
+- Message catalogs: `apps/web/src/messages/{en,kn}/*.json`
+- API locale via `X-CrimeLens-Locale` / report `locale` field
+- Docs: [`docs/product/i18n.md`](./docs/product/i18n.md)
 
 ---
 

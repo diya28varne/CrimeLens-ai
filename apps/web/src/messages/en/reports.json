@@ -1,0 +1,29 @@
+{
+  "title": "Executive Intelligence Reports",
+  "subtitle": "One-click briefings for command — grounded in CrimeLens analytics and predictions.",
+  "generate": "Generate Report",
+  "generating": "Generating…",
+  "present": "Present mode",
+  "print": "Print / PDF",
+  "template": "Template",
+  "templates": {
+    "daily": "Daily Intelligence Brief",
+    "weekly": "Weekly Crime Analysis",
+    "festival": "Festival Security Assessment"
+  },
+  "languageNote": "Report language follows the app language setting.",
+  "bilingualFuture": "Bilingual EN+KN export will be available in a later release.",
+  "sections": {
+    "cover": "Cover",
+    "executiveSummary": "Executive Summary",
+    "overview": "Crime Overview",
+    "hotspots": "Hotspot Analysis",
+    "predictions": "Predictions",
+    "recommendations": "Operational Recommendations",
+    "checklist": "Action Checklist",
+    "xai": "Explainability summary"
+  },
+  "empty": "Generate a report to begin.",
+  "errorLoad": "Failed to generate report",
+  "disclaimer": "Intelligence report assembled from CrimeLens analytics. Not an operational order."
+}

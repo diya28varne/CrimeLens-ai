@@ -1,51 +1,142 @@
-import type { ReactNode } from "react";
-import Link from "next/link";
+"use client";
 
-const nav = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/analytics", label: "Analytics" },
-  { href: "/map", label: "Map" },
-  { href: "/prediction", label: "Prediction" },
-  { href: "/simulation", label: "Simulation" },
-  { href: "/advisor", label: "Advisor" },
-  { href: "/story", label: "Story" },
-  { href: "/explain", label: "Explain" },
-  { href: "/network", label: "Network" },
-  { href: "/reports", label: "Reports" },
-  { href: "/ai", label: "AI Copilot" },
-  { href: "/settings", label: "Settings" },
-  { href: "/admin", label: "Admin" },
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
+
+import { LanguageSwitcher } from "@/shared/i18n/LanguageSwitcher";
+import { KarnatakaPoliceEmblem } from "@/shared/ui/KarnatakaPoliceEmblem";
+
+const NAV_ITEMS: Array<{ href: string; key: string }> = [
+  { href: "/dashboard", key: "nav.dashboard" },
+  { href: "/analytics", key: "nav.analytics" },
+  { href: "/map", key: "nav.map" },
+  { href: "/prediction", key: "nav.prediction" },
+  { href: "/simulation", key: "nav.simulation" },
+  { href: "/advisor", key: "nav.advisor" },
+  { href: "/story", key: "nav.story" },
+  { href: "/explain", key: "nav.explain" },
+  { href: "/network", key: "nav.network" },
+  { href: "/reports", key: "nav.reports" },
+  { href: "/ai", key: "nav.ai" },
+  { href: "/settings", key: "nav.settings" },
+  { href: "/admin", key: "nav.admin" },
 ];
 
 export default function AppShellLayout({ children }: { children: ReactNode }) {
+  const { t } = useTranslation("common");
+  const pathname = usePathname();
+
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", minHeight: "100vh" }}>
+    <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", minHeight: "100vh" }}>
       <aside
         style={{
           borderRight: "1px solid var(--cl-border)",
-          background: "rgba(18, 26, 43, 0.9)",
-          padding: "1.25rem 1rem",
+          background: "rgba(18, 26, 43, 0.92)",
+          padding: "1.1rem 0.9rem",
+          display: "flex",
+          flexDirection: "column",
+          gap: 12,
         }}
       >
-        <div style={{ fontWeight: 700, marginBottom: 20 }}>CrimeLens AI</div>
-        <nav style={{ display: "grid", gap: 8 }}>
-          {nav.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              style={{ color: "var(--cl-muted)", textDecoration: "none", fontSize: 14 }}
-            >
-              {item.label}
-            </Link>
-          ))}
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <KarnatakaPoliceEmblem size={40} />
+          <div>
+            <div style={{ fontSize: 12, color: "#f5d76e", fontWeight: 700, letterSpacing: 0.3 }}>
+              {t("govBadge")}
+            </div>
+            <div style={{ fontWeight: 700, marginTop: 2, fontSize: 16 }}>{t("appName")}</div>
+          </div>
+        </div>
+        <div style={{ fontSize: 11, color: "var(--cl-muted)", lineHeight: 1.4, paddingLeft: 2 }}>
+          {t("appTagline")}
+        </div>
+
+        <nav style={{ display: "grid", gap: 4, flex: 1 }}>
+          {NAV_ITEMS.map((item) => {
+            const active = pathname === item.href || pathname?.startsWith(`${item.href}/`);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                style={{
+                  color: active ? "var(--cl-text)" : "var(--cl-muted)",
+                  textDecoration: "none",
+                  fontSize: 13.5,
+                  padding: "8px 10px",
+                  borderRadius: 8,
+                  background: active ? "rgba(61,139,253,0.14)" : "transparent",
+                  border: active ? "1px solid rgba(61,139,253,0.35)" : "1px solid transparent",
+                }}
+              >
+                {t(item.key)}
+              </Link>
+            );
+          })}
         </nav>
-        <div style={{ marginTop: 28 }}>
-          <Link href="/login" style={{ color: "var(--cl-accent)", fontSize: 13, textDecoration: "none" }}>
-            Sign in
+
+        <div style={{ display: "grid", gap: 10 }}>
+          <LanguageSwitcher />
+          <Link
+            href="/login"
+            style={{ color: "var(--cl-accent)", fontSize: 13, textDecoration: "none", padding: "0 4px" }}
+          >
+            {t("signIn")}
           </Link>
+          <div style={{ fontSize: 10, color: "var(--cl-muted)", lineHeight: 1.35, padding: "0 4px" }}>
+            {t("footer")}
+          </div>
         </div>
       </aside>
-      <section style={{ padding: "1.25rem 1.5rem", minWidth: 0 }}>{children}</section>
+
+      <div style={{ display: "grid", gridTemplateRows: "auto 1fr", minWidth: 0 }}>
+        <header
+          className="no-print"
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 16,
+            padding: "0.85rem 1.5rem",
+            borderBottom: "1px solid var(--cl-border)",
+            background:
+              "linear-gradient(90deg, rgba(14, 28, 52, 0.95) 0%, rgba(11, 18, 32, 0.88) 55%, rgba(18, 36, 64, 0.92) 100%)",
+            minHeight: 80,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 16, minWidth: 0 }}>
+            <KarnatakaPoliceEmblem size={58} />
+            <div style={{ minWidth: 0 }}>
+              <div
+                style={{
+                  fontSize: 26,
+                  fontWeight: 800,
+                  color: "#ffffff",
+                  letterSpacing: 0.15,
+                  lineHeight: 1.1,
+                  textShadow: "0 1px 2px rgba(0,0,0,0.45)",
+                }}
+              >
+                {t("govBadge")}
+              </div>
+              <div
+                style={{
+                  marginTop: 5,
+                  fontSize: 14,
+                  fontWeight: 650,
+                  color: "#f5d76e",
+                  letterSpacing: 0.35,
+                }}
+              >
+                {t("appName")} · {t("govPortalHint")}
+              </div>
+            </div>
+          </div>
+          <LanguageSwitcher emphasize />
+        </header>
+        <section style={{ padding: "1.25rem 1.5rem", minWidth: 0 }}>{children}</section>
+      </div>
     </div>
   );
 }

@@ -1,0 +1,53 @@
+{
+  "title": "Analytics",
+  "subtitle": "Deep analysis — period impact, temporal patterns, offense concentration, and socio-economic drivers. Dashboard is for ops glance; this page answers why and where to act.",
+  "socioIndicator": "Socio indicator",
+  "indicators": {
+    "unemployment_rate": "Unemployment rate",
+    "literacy_rate": "Literacy rate",
+    "population_density": "Population density",
+    "poverty_index": "Poverty index",
+    "urban_pct": "Urban %"
+  },
+  "metrics": {
+    "vsPrior": "vs prior 30d",
+    "spikeDays": "Spike days",
+    "spikeHint": "days above mean+1.5σ",
+    "peakHour": "Peak hour",
+    "topOffenseShare": "Top offense share",
+    "highCritical": "High/critical",
+    "offenseMix": "Offense mix"
+  },
+  "findings": {
+    "title": "Analyst findings",
+    "autoDerived": "Auto-derived from the last {{days}} days",
+    "loading": "Loading findings…"
+  },
+  "actions": {
+    "advisor": "Open Advisor →",
+    "explain": "Explain model →",
+    "story": "Story playback →",
+    "map": "Map / hotspots →"
+  },
+  "charts": {
+    "periodImpact": "Period impact — current vs prior baseline",
+    "periodHint": "Spikes marked · dashed line = prior-period daily average",
+    "current30d": "Current 30d",
+    "priorBaseline": "Prior 30d (total)",
+    "weekdayWeekend": "Weekday vs weekend intensity",
+    "weekendOrange": "Orange = weekend",
+    "weekdayRate": "Weekday ~{{rate}}/day",
+    "weekendRate": "Weekend ~{{rate}}/day",
+    "hourPattern": "Hour-of-day pattern",
+    "peakHighlight": "Peak hour highlighted",
+    "severityMix": "Severity mix",
+    "offenseConcentration": "Offense concentration",
+    "top3": "Top-3 = {{pct}}% of volume",
+    "socioScatter": "Socio-economic scatter",
+    "socioDriver": "Socio driver · r={{r}} ({{interpretation}})",
+    "socioHint": "District-level Pearson correlation — not shown on Dashboard",
+    "strongestR": "Strongest |r| overall: {{code}} ({{abs}}, {{interpretation}}). Use Advisor to turn this into deployment guidance.",
+    "rankedR": "Ranked |r| across socio-economic indicators"
+  },
+  "errorLoad": "Failed to load analytics"
+}

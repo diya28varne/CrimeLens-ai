@@ -1,0 +1,27 @@
+{
+  "title": "Settings",
+  "subtitle": "Profile, preferences, and language.",
+  "profile": "Profile",
+  "preferences": "Preferences",
+  "language": "Display language",
+  "languageHint": "Changes apply instantly across the application.",
+  "defaultReport": "Default report template",
+  "mapLayer": "Default map layer",
+  "showDisclaimers": "Show AI disclaimers",
+  "denseUi": "Dense UI",
+  "savePrefs": "Save preferences",
+  "saved": "Preferences saved",
+  "roles": "Roles",
+  "permissions": "Permissions",
+  "signOut": "Sign out",
+  "errorLoad": "Failed to load settings",
+  "admin": {
+    "title": "Administration",
+    "subtitle": "Users, roles, feature flags, and AI audit snapshot.",
+    "users": "Users",
+    "roles": "Roles",
+    "flags": "Feature flags",
+    "audit": "AI audit",
+    "errorLoad": "Failed to load admin overview"
+  }
+}
