@@ -1,6 +1,7 @@
 export const appConfig = {
   name: "CrimeLens AI",
-  apiBaseUrl: process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api/v1",
+  // Prefer same-origin proxy (/api/v1) so auth works on localhost and 127.0.0.1.
+  apiBaseUrl: process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api/v1",
   features: {
     ai: process.env.NEXT_PUBLIC_AI_ENABLED === "true",
     ml: process.env.NEXT_PUBLIC_ML_ENABLED === "true",

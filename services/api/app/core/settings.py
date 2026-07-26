@@ -39,6 +39,8 @@ class Settings(BaseSettings):
     jwt_refresh_ttl_days: int = 7
     cookie_secure: bool = False
     cookie_domain: str = "localhost"
+    # Local/datathon: any email+password can sign in (auto-provisions users).
+    open_demo_login: bool = Field(default=True, alias="OPEN_DEMO_LOGIN")
 
     gemini_api_key: str = Field(default="", alias="GEMINI_API_KEY")
     qdrant_url: str = Field(default="", alias="QDRANT_URL")
@@ -52,6 +54,13 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.app_env == "production"
+
+    @property
+    def allow_open_demo_login(self) -> bool:
+        """Open sign-in for local/datathon demos — never in production."""
+        if self.is_production:
+            return False
+        return self.open_demo_login
 
 
 @lru_cache

@@ -16,16 +16,18 @@ type LoginResponse = {
   };
 };
 
+const DEMO_EMAIL = "admin@crimelens.local";
+const DEMO_PASSWORD = "ChangeMe123!";
+
 export default function LoginPage() {
   const { t } = useTranslation("auth");
   const { t: tc } = useTranslation("common");
-  const [email, setEmail] = useState("admin@crimelens.local");
-  const [password, setPassword] = useState("ChangeMe123!");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function onSubmit(event: FormEvent) {
-    event.preventDefault();
+  async function doLogin(loginEmail: string, loginPassword: string) {
     setLoading(true);
     setError(null);
     try {
@@ -38,7 +40,7 @@ export default function LoginPage() {
           "Accept-Language": locale === "kn" ? "kn-IN,kn;q=0.9" : "en",
         },
         credentials: "include",
-        body: JSON.stringify({ email, password, client: "browser" }),
+        body: JSON.stringify({ email: loginEmail, password: loginPassword, client: "api" }),
       });
       const payload = (await response.json().catch(() => null)) as LoginResponse | null;
       if (!response.ok) {
@@ -47,16 +49,27 @@ export default function LoginPage() {
             t("failed"),
         );
       }
-      // Browser login sets httpOnly cookies; also keep token if API returns one.
-      if (payload?.data.access_token) {
-        setAccessToken(payload.data.access_token);
+      const token = payload?.data.access_token;
+      if (!token) {
+        throw new Error(t("failed"));
       }
-      window.location.assign("/map");
+      setAccessToken(token);
+      window.location.assign("/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("failed"));
+      const message = err instanceof Error ? err.message : t("failed");
+      setError(
+        message === "Failed to fetch" || message.toLowerCase().includes("network")
+          ? t("networkError")
+          : message,
+      );
     } finally {
       setLoading(false);
     }
+  }
+
+  async function onSubmit(event: FormEvent) {
+    event.preventDefault();
+    await doLogin(email, password);
   }
 
   return (
@@ -127,6 +140,30 @@ export default function LoginPage() {
           boxShadow: "0 16px 40px rgba(0,0,0,0.35)",
         }}
       >
+        <button
+          type="button"
+          disabled={loading}
+          onClick={() => void doLogin(DEMO_EMAIL, DEMO_PASSWORD)}
+          style={demoButtonStyle}
+        >
+          {loading ? t("submitting") : t("continueDemo")}
+        </button>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr auto 1fr",
+            alignItems: "center",
+            gap: 8,
+            color: "var(--cl-muted)",
+            fontSize: 12,
+          }}
+        >
+          <span style={{ height: 1, background: "var(--cl-border)" }} />
+          <span>or</span>
+          <span style={{ height: 1, background: "var(--cl-border)" }} />
+        </div>
+
         <label style={{ display: "grid", gap: 6 }}>
           <span>{t("email")}</span>
           <input
@@ -134,6 +171,8 @@ export default function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
             type="email"
             required
+            placeholder="you@gmail.com"
+            autoComplete="username"
             style={inputStyle}
           />
         </label>
@@ -144,7 +183,9 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             type="password"
             required
-            minLength={8}
+            minLength={1}
+            placeholder="any password"
+            autoComplete="current-password"
             style={inputStyle}
           />
         </label>
@@ -173,4 +214,15 @@ const buttonStyle: CSSProperties = {
   padding: "0.75rem 1rem",
   fontWeight: 600,
   cursor: "pointer",
+};
+
+const demoButtonStyle: CSSProperties = {
+  background: "linear-gradient(180deg, #3d8bfd, #1f6feb)",
+  color: "#fff",
+  border: 0,
+  borderRadius: 8,
+  padding: "0.85rem 1rem",
+  fontWeight: 700,
+  cursor: "pointer",
+  fontSize: 15,
 };

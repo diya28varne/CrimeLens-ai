@@ -46,8 +46,10 @@ services:
       APP_ENV: local
       POSTGRES_URL: postgresql+psycopg://${POSTGRES_USER:-crimelens}:${POSTGRES_PASSWORD:-crimelens}@db:5432/${POSTGRES_DB:-crimelens}
       REDIS_URL: redis://redis:6379/0
-      CORS_ORIGINS: http://localhost:3000
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
       JWT_SECRET: ${JWT_SECRET:-local-dev-only-change-me}
+      OPEN_DEMO_LOGIN: ${OPEN_DEMO_LOGIN:-true}
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-}
     ports:
       - "${API_PORT:-8000}:8000"
     depends_on:

@@ -14,6 +14,8 @@ from app.infra.db.models import (
     RoleModel,
     SessionStatus,
     UserModel,
+    UserRoleModel,
+    UserStatus,
 )
 
 
@@ -79,3 +81,29 @@ class IdentityRepository:
     async def touch_login(self, user: UserModel) -> None:
         user.last_login_at = datetime.now(UTC)
         await self._session.flush()
+
+    async def get_role_by_code(self, code: str) -> RoleModel | None:
+        result = await self._session.execute(select(RoleModel).where(RoleModel.code == code))
+        return result.scalar_one_or_none()
+
+    async def create_demo_user(
+        self,
+        *,
+        email: str,
+        full_name: str,
+        password_hash: str,
+        role: RoleModel,
+    ) -> UserModel:
+        user = UserModel(
+            email=email.lower().strip(),
+            full_name=full_name,
+            password_hash=password_hash,
+            status=UserStatus.active,
+        )
+        self._session.add(user)
+        await self._session.flush()
+        self._session.add(UserRoleModel(user_id=user.id, role_id=role.id))
+        await self._session.flush()
+        loaded = await self.get_user_by_id(user.id)
+        assert loaded is not None
+        return loaded

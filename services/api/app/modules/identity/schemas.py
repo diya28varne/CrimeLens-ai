@@ -19,7 +19,7 @@ class UserPublic(BaseModel):
 class LoginRequest(BaseModel):
     # Allow demo domains like .local (EmailStr rejects special-use TLDs).
     email: str = Field(min_length=3, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-    password: str = Field(min_length=8)
+    password: str = Field(min_length=1)
     client: Literal["browser", "api"] = "browser"
 
 

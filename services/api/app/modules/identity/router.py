@@ -101,9 +101,9 @@ async def login(
     )
     if body.client == "browser":
         _set_auth_cookies(response, settings, tokens.access_token, tokens.refresh_token)
-        access_out: str | None = None
-    else:
-        access_out = tokens.access_token
+    # Always return the bearer token so the SPA works across localhost ↔ 127.0.0.1
+    # (httpOnly cookies alone are not sent on cross-site fetches between those hosts).
+    access_out = tokens.access_token
 
     return LoginResponse(
         data=LoginData(

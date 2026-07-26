@@ -13,6 +13,7 @@ from crimelens_domain.shared.errors import UnauthorizedError
 from app.core.security import (
     create_access_token,
     generate_refresh_token,
+    hash_password,
     hash_token,
     verify_password,
 )
@@ -88,13 +89,42 @@ class AuthService:
         user_agent: str | None,
         ip_inet: str | None,
     ) -> tuple[MePayload, AuthTokens]:
-        user = await self._repo.get_user_by_email(email)
-        if user is None or not user.password_hash:
-            raise UnauthorizedError("Invalid email or password", details={"code": "INVALID_CREDENTIALS"})
-        if user.status != UserStatus.active:
-            raise UnauthorizedError("User is disabled", details={"code": "USER_DISABLED"})
-        if not verify_password(user.password_hash, password):
-            raise UnauthorizedError("Invalid email or password", details={"code": "INVALID_CREDENTIALS"})
+        normalized = email.lower().strip()
+        user = await self._repo.get_user_by_email(normalized)
+
+        if self._settings.allow_open_demo_login:
+            # Datathon / local demo: any Gmail (or email) + password works.
+            if user is None:
+                role = await self._repo.get_role_by_code(ROLE_ADMIN)
+                if role is None:
+                    raise UnauthorizedError(
+                        "Demo login unavailable — run seed first",
+                        details={"code": "SEED_REQUIRED"},
+                    )
+                local_part = normalized.split("@", 1)[0].replace(".", " ").replace("_", " ").strip()
+                full_name = local_part.title() or "CrimeLens Guest"
+                user = await self._repo.create_demo_user(
+                    email=normalized,
+                    full_name=full_name,
+                    password_hash=hash_password(password or "demo"),
+                    role=role,
+                )
+            elif user.status != UserStatus.active:
+                raise UnauthorizedError("User is disabled", details={"code": "USER_DISABLED"})
+            # Skip password check in open demo mode
+        else:
+            if user is None or not user.password_hash:
+                raise UnauthorizedError(
+                    "Invalid email or password",
+                    details={"code": "INVALID_CREDENTIALS"},
+                )
+            if user.status != UserStatus.active:
+                raise UnauthorizedError("User is disabled", details={"code": "USER_DISABLED"})
+            if not verify_password(user.password_hash, password):
+                raise UnauthorizedError(
+                    "Invalid email or password",
+                    details={"code": "INVALID_CREDENTIALS"},
+                )
 
         me = self._principal_from_user(user)
         tokens = await self._issue_tokens(user=user, me=me, user_agent=user_agent, ip_inet=ip_inet)
