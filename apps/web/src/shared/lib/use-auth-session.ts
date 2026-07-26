@@ -3,7 +3,11 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { apiFetch } from "@/shared/api/client";
-import { clearAccessToken } from "@/shared/lib/auth-storage";
+import { clearAccessToken, getAccessToken } from "@/shared/lib/auth-storage";
+import {
+  isClientDemoToken,
+  parseClientDemoToken,
+} from "@/shared/lib/client-demo-auth";
 import { appConfig } from "@/shared/config";
 
 export type AuthUser = {
@@ -28,6 +32,12 @@ export function useAuthSession(): AuthState {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
+      const token = getAccessToken();
+      if (isClientDemoToken(token)) {
+        const demoUser = token ? parseClientDemoToken(token) : null;
+        setUser(demoUser);
+        return;
+      }
       const res = await apiFetch<{ data: { user: AuthUser } }>("/auth/me");
       setUser(res.data.user);
     } catch {

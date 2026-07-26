@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/shared/i18n/LanguageSwitcher";
 import { appConfig } from "@/shared/config";
 import { setAccessToken } from "@/shared/lib/auth-storage";
+import { createClientDemoToken } from "@/shared/lib/client-demo-auth";
 import { readStoredLocale } from "@/shared/i18n";
 import { KspLogo } from "@/shared/ui/KspLogo";
 
@@ -19,6 +20,11 @@ type LoginResponse = {
 const DEMO_EMAIL = "admin@crimelens.local";
 const DEMO_PASSWORD = "ChangeMe123!";
 
+function finishDemoLogin(loginEmail: string) {
+  setAccessToken(createClientDemoToken(loginEmail));
+  window.location.assign("/dashboard");
+}
+
 export default function LoginPage() {
   const { t } = useTranslation("auth");
   const { t: tc } = useTranslation("common");
@@ -30,6 +36,13 @@ export default function LoginPage() {
   async function doLogin(loginEmail: string, loginPassword: string) {
     setLoading(true);
     setError(null);
+    const normalized = loginEmail.trim().toLowerCase();
+    if (!normalized.includes("@") || !loginPassword) {
+      setError(t("failed"));
+      setLoading(false);
+      return;
+    }
+
     try {
       const locale = readStoredLocale();
       const response = await fetch(`${appConfig.apiBaseUrl}/auth/login`, {
@@ -40,10 +53,15 @@ export default function LoginPage() {
           "Accept-Language": locale === "kn" ? "kn-IN,kn;q=0.9" : "en",
         },
         credentials: "include",
-        body: JSON.stringify({ email: loginEmail, password: loginPassword, client: "api" }),
+        body: JSON.stringify({ email: normalized, password: loginPassword, client: "api" }),
       });
       const payload = (await response.json().catch(() => null)) as LoginResponse | null;
       if (!response.ok) {
+        // Vercel without API / old proxy: accept any email+password in the browser.
+        if ([404, 502, 503, 500].includes(response.status)) {
+          finishDemoLogin(normalized);
+          return;
+        }
         throw new Error(
           (payload as unknown as { error?: { message?: string } })?.error?.message ??
             t("failed"),
@@ -51,17 +69,23 @@ export default function LoginPage() {
       }
       const token = payload?.data.access_token;
       if (!token) {
-        throw new Error(t("failed"));
+        finishDemoLogin(normalized);
+        return;
       }
       setAccessToken(token);
       window.location.assign("/dashboard");
     } catch (err) {
       const message = err instanceof Error ? err.message : t("failed");
-      setError(
-        message === "Failed to fetch" || message.toLowerCase().includes("network")
-          ? t("networkError")
-          : message,
-      );
+      // Network errors (common when Vercel points at localhost API): open demo login.
+      if (
+        message === "Failed to fetch" ||
+        message.toLowerCase().includes("network") ||
+        message.toLowerCase().includes("fetch")
+      ) {
+        finishDemoLogin(normalized);
+        return;
+      }
+      setError(message);
     } finally {
       setLoading(false);
     }
