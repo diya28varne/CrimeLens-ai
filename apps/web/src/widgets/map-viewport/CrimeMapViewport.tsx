@@ -222,7 +222,8 @@ function MapLibreSatelliteHybrid({ layerMode, severity }: CrimeMapViewportProps)
         getPosition: (d: IncidentPoint) => d.position,
         radiusUnits: "pixels" as const,
         billboard: true,
-        parameters: { depthTest: false },
+        // deck.gl typings omit depthTest; runtime WebGL param is valid
+        parameters: { depthTest: false } as never,
       };
 
       result.push(

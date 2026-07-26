@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // standalone only for production image builds — avoids odd dev-router issues
-  ...(process.env.NODE_ENV === "production" ? { output: "standalone" as const } : {}),
+  // standalone only for Docker image builds — Vercel breaks with output:standalone
+  ...(process.env.DOCKER_BUILD === "1" ? { output: "standalone" as const } : {}),
   reactStrictMode: true,
   poweredByHeader: false,
   experimental: {
