@@ -38,7 +38,7 @@ export default function LoginPage() {
           "Accept-Language": locale === "kn" ? "kn-IN,kn;q=0.9" : "en",
         },
         credentials: "include",
-        body: JSON.stringify({ email, password, client: "api" }),
+        body: JSON.stringify({ email, password, client: "browser" }),
       });
       const payload = (await response.json().catch(() => null)) as LoginResponse | null;
       if (!response.ok) {
@@ -47,6 +47,7 @@ export default function LoginPage() {
             t("failed"),
         );
       }
+      // Browser login sets httpOnly cookies; also keep token if API returns one.
       if (payload?.data.access_token) {
         setAccessToken(payload.data.access_token);
       }

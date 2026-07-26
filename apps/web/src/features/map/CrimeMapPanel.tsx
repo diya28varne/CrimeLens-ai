@@ -75,10 +75,10 @@ export function CrimeMapPanel() {
       </div>
 
       <footer style={{ display: "flex", gap: 14, flexWrap: "wrap", fontSize: 12, color: "var(--cl-muted)" }}>
-        <LegendSwatch color="rgb(90, 200, 250)" label={t("map.legend") + ": Low"} />
-        <LegendSwatch color="rgb(255, 204, 0)" label="Medium" />
-        <LegendSwatch color="rgb(255, 149, 0)" label="High" />
-        <LegendSwatch color="rgb(255, 69, 58)" label="Critical" />
+        <LegendSwatch color="rgb(30, 136, 229)" label={t("map.legend") + ": Low"} />
+        <LegendSwatch color="rgb(255, 193, 7)" label="Medium" />
+        <LegendSwatch color="rgb(255, 111, 0)" label="High" />
+        <LegendSwatch color="rgb(229, 57, 53)" label="Critical" />
       </footer>
     </div>
   );

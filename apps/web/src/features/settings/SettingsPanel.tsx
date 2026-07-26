@@ -91,7 +91,18 @@ export function SettingsPanel() {
 
   function signOut() {
     clearAccessToken();
-    window.location.assign("/login");
+    void (async () => {
+      try {
+        const { appConfig } = await import("@/shared/config");
+        await fetch(`${appConfig.apiBaseUrl}/auth/logout`, {
+          method: "POST",
+          credentials: "include",
+        });
+      } catch {
+        // ignore network errors on logout
+      }
+      window.location.assign("/login");
+    })();
   }
 
   return (

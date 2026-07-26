@@ -22,6 +22,7 @@ export async function fetchIncidentsGeoJson(params: {
   radius_m?: number;
   from?: string;
   to?: string;
+  signal?: AbortSignal;
 }): Promise<GeoJsonFeatureCollection> {
   const query = new URLSearchParams();
   if (params.bbox) query.set("bbox", params.bbox);
@@ -32,5 +33,7 @@ export async function fetchIncidentsGeoJson(params: {
   if (params.to) query.set("to", params.to);
   query.set("limit", "2000");
 
-  return apiFetch<GeoJsonFeatureCollection>(`/spatial/incidents?${query.toString()}`);
+  return apiFetch<GeoJsonFeatureCollection>(`/spatial/incidents?${query.toString()}`, {
+    signal: params.signal,
+  });
 }

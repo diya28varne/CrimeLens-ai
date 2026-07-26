@@ -5,6 +5,17 @@ const nextConfig: NextConfig = {
   ...(process.env.NODE_ENV === "production" ? { output: "standalone" as const } : {}),
   reactStrictMode: true,
   poweredByHeader: false,
+  experimental: {
+    optimizePackageImports: [
+      "echarts",
+      "echarts-for-react",
+      "i18next",
+      "react-i18next",
+      "@deck.gl/layers",
+      "@deck.gl/aggregation-layers",
+      "@deck.gl/core",
+    ],
+  },
   transpilePackages: [
     "maplibre-gl",
     "react-map-gl",

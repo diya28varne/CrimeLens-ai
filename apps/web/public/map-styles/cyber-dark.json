@@ -1,0 +1,41 @@
+{
+  "version": 8,
+  "name": "CrimeLens Cyber Dark",
+  "sources": {
+    "carto-dark": {
+      "type": "raster",
+      "tiles": [
+        "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
+        "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
+        "https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
+        "https://d.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png"
+      ],
+      "tileSize": 256,
+      "attribution": "© CARTO, © OpenStreetMap contributors",
+      "maxzoom": 20
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#0b1220"
+      }
+    },
+    {
+      "id": "dark-basemap",
+      "type": "raster",
+      "source": "carto-dark",
+      "minzoom": 0,
+      "maxzoom": 22,
+      "paint": {
+        "raster-opacity": 1,
+        "raster-brightness-min": 0.2,
+        "raster-brightness-max": 1,
+        "raster-contrast": 0.05,
+        "raster-saturation": -0.1
+      }
+    }
+  ]
+}

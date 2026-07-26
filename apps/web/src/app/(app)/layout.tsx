@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import { LanguageSwitcher } from "@/shared/i18n/LanguageSwitcher";
+import { useAuthSession } from "@/shared/lib/use-auth-session";
 import { KspLogo } from "@/shared/ui/KspLogo";
 
 const NAV_ITEMS: Array<{ href: string; key: string }> = [
@@ -24,6 +25,7 @@ const NAV_ITEMS: Array<{ href: string; key: string }> = [
 export default function AppShellLayout({ children }: { children: ReactNode }) {
   const { t } = useTranslation("common");
   const pathname = usePathname();
+  const { loading: authLoading, user, signOut } = useAuthSession();
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", minHeight: "100vh" }}>
@@ -63,6 +65,7 @@ export default function AppShellLayout({ children }: { children: ReactNode }) {
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch
                 style={{
                   color: active ? "var(--cl-text)" : "var(--cl-muted)",
                   textDecoration: "none",
@@ -81,12 +84,43 @@ export default function AppShellLayout({ children }: { children: ReactNode }) {
 
         <div style={{ display: "grid", gap: 10 }}>
           <LanguageSwitcher />
-          <Link
-            href="/login"
-            style={{ color: "var(--cl-accent)", fontSize: 13, textDecoration: "none", padding: "0 4px" }}
-          >
-            {t("signIn")}
-          </Link>
+          {authLoading ? (
+            <span style={{ color: "var(--cl-muted)", fontSize: 12, padding: "0 4px" }}>
+              {t("loading")}
+            </span>
+          ) : user ? (
+            <div style={{ display: "grid", gap: 6, padding: "0 4px" }}>
+              <div style={{ fontSize: 12, color: "var(--cl-text)", fontWeight: 600, lineHeight: 1.3 }}>
+                {user.full_name}
+              </div>
+              <div style={{ fontSize: 11, color: "var(--cl-muted)", wordBreak: "break-all" }}>
+                {user.email}
+              </div>
+              <button
+                type="button"
+                onClick={() => void signOut()}
+                style={{
+                  background: "transparent",
+                  border: 0,
+                  padding: 0,
+                  marginTop: 2,
+                  color: "var(--cl-accent)",
+                  fontSize: 13,
+                  textAlign: "left",
+                  cursor: "pointer",
+                }}
+              >
+                {t("signOut")}
+              </button>
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              style={{ color: "var(--cl-accent)", fontSize: 13, textDecoration: "none", padding: "0 4px" }}
+            >
+              {t("signIn")}
+            </Link>
+          )}
           <div style={{ fontSize: 10, color: "var(--cl-muted)", lineHeight: 1.35, padding: "0 4px" }}>
             {t("footer")}
           </div>

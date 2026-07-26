@@ -1,0 +1,102 @@
+{
+  "version": 8,
+  "name": "CrimeLens Satellite Hybrid",
+  "sources": {
+    "esri-imagery": {
+      "type": "raster",
+      "tiles": [
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+      ],
+      "tileSize": 256,
+      "attribution": "Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community",
+      "maxzoom": 19
+    },
+    "esri-boundaries": {
+      "type": "raster",
+      "tiles": [
+        "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
+      ],
+      "tileSize": 256,
+      "attribution": "© Esri",
+      "maxzoom": 19
+    },
+    "esri-roads": {
+      "type": "raster",
+      "tiles": [
+        "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}"
+      ],
+      "tileSize": 256,
+      "attribution": "© Esri",
+      "maxzoom": 19
+    },
+    "terrain-dem": {
+      "type": "raster-dem",
+      "tiles": [
+        "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"
+      ],
+      "encoding": "terrarium",
+      "tileSize": 256,
+      "maxzoom": 15,
+      "attribution": "Terrain © Mapzen / AWS elevation tiles"
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#1a2332"
+      }
+    },
+    {
+      "id": "satellite",
+      "type": "raster",
+      "source": "esri-imagery",
+      "minzoom": 0,
+      "maxzoom": 22,
+      "paint": {
+        "raster-opacity": 1,
+        "raster-contrast": 0.12,
+        "raster-saturation": 0.08,
+        "raster-brightness-min": 0.05,
+        "raster-brightness-max": 1,
+        "raster-fade-duration": 0
+      }
+    },
+    {
+      "id": "hillshade",
+      "type": "hillshade",
+      "source": "terrain-dem",
+      "layout": {
+        "visibility": "none"
+      },
+      "paint": {
+        "hillshade-exaggeration": 0.45,
+        "hillshade-shadow-color": "#1a1a1a",
+        "hillshade-highlight-color": "#ffffff",
+        "hillshade-illumination-direction": 315,
+        "hillshade-illumination-anchor": "viewport"
+      }
+    },
+    {
+      "id": "roads-overlay",
+      "type": "raster",
+      "source": "esri-roads",
+      "minzoom": 6,
+      "maxzoom": 22,
+      "paint": {
+        "raster-opacity": 1
+      }
+    },
+    {
+      "id": "places-overlay",
+      "type": "raster",
+      "source": "esri-boundaries",
+      "minzoom": 3,
+      "maxzoom": 22,
+      "paint": {
+        "raster-opacity": 1
+      }
+    }
+  ]
+}
