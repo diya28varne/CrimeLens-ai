@@ -24,3 +24,20 @@ body {
   color: var(--cl-text);
   font-family: "Segoe UI", "IBM Plex Sans", "Helvetica Neue", sans-serif;
 }
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff !important;
+    color: #111 !important;
+  }
+  #intelligence-report section {
+    break-inside: avoid;
+    border-color: #ccc !important;
+    background: #fff !important;
+    color: #111 !important;
+  }
+}
+

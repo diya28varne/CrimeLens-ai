@@ -37,19 +37,6 @@ def upgrade() -> None:
     person_link_origin = sa.Enum("derived", "curated", name="person_link_origin")
     message_role = sa.Enum("system", "user", "assistant", "tool", name="message_role")
 
-    bind = op.get_bind()
-    for e in (
-        model_task,
-        model_status,
-        prediction_scope_type,
-        prediction_metric,
-        hotspot_method,
-        person_link_type,
-        person_link_origin,
-        message_role,
-    ):
-        e.create(bind, checkfirst=True)
-
     op.create_table(
         "model_registry",
         sa.Column("id", sa.UUID(), primary_key=True, nullable=False),

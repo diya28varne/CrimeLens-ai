@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import type { EChartsOption } from "echarts";
 
@@ -178,6 +179,24 @@ export function PredictionPanel() {
               {expl.model_version}
             </div>
           )}
+          {selected ? (
+            <Link
+              href={`/explain?value=${selected}`}
+              style={{
+                display: "inline-block",
+                marginTop: 12,
+                background: "var(--cl-accent)",
+                color: "#fff",
+                textDecoration: "none",
+                borderRadius: 8,
+                padding: "8px 12px",
+                fontWeight: 600,
+                fontSize: 13,
+              }}
+            >
+              Open Decision Card →
+            </Link>
+          ) : null}
         </Panel>
       </div>
 

@@ -22,6 +22,12 @@ from app.modules.spatial.router import router as spatial_router
 from app.modules.dashboard.router import router as dashboard_router
 from app.modules.predictions.router import router as predictions_router
 from app.modules.network.router import router as network_router
+from app.modules.simulation.router import router as simulation_router
+from app.modules.advisor.router import router as advisor_router
+from app.modules.story.router import router as story_router
+from app.modules.explain.router import router as explain_router
+from app.modules.reports.router import router as reports_router
+from app.modules.admin.router import router as admin_router
 from app.modules.ai_copilot.router import router as ai_router
 
 logger = get_logger(__name__)
@@ -43,7 +49,7 @@ def create_app() -> FastAPI:
     settings = get_settings()
     application = FastAPI(
         title=settings.app_name,
-        version="0.6.0",
+        version="0.12.0",
         lifespan=lifespan,
         docs_url="/docs",
         redoc_url="/redoc",
@@ -70,6 +76,12 @@ def create_app() -> FastAPI:
     application.include_router(socio_analytics_router, prefix="/api/v1")
     application.include_router(predictions_router, prefix="/api/v1")
     application.include_router(network_router, prefix="/api/v1")
+    application.include_router(simulation_router, prefix="/api/v1")
+    application.include_router(advisor_router, prefix="/api/v1")
+    application.include_router(story_router, prefix="/api/v1")
+    application.include_router(explain_router, prefix="/api/v1")
+    application.include_router(reports_router, prefix="/api/v1")
+    application.include_router(admin_router, prefix="/api/v1")
     application.include_router(ai_router, prefix="/api/v1")
 
     return application

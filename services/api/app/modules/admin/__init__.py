@@ -1,1 +1,1 @@
-
+"""Admin console module."""

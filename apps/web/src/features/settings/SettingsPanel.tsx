@@ -1,0 +1,282 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+
+import { apiFetch, ApiError } from "@/shared/api/client";
+import { clearAccessToken } from "@/shared/lib/auth-storage";
+
+type MeData = {
+  user: { id: string; email: string; full_name: string; status: string };
+  roles: string[];
+  permissions: string[];
+  jurisdictions: { district_ids: string[]; station_ids: string[] };
+};
+
+const PREFS_KEY = "cl_user_prefs";
+
+type Prefs = {
+  defaultReport: "daily" | "weekly" | "festival";
+  mapLayer: "points" | "heatmap" | "both";
+  showDisclaimers: boolean;
+  denseUi: boolean;
+};
+
+const DEFAULT_PREFS: Prefs = {
+  defaultReport: "weekly",
+  mapLayer: "both",
+  showDisclaimers: true,
+  denseUi: false,
+};
+
+function loadPrefs(): Prefs {
+  if (typeof window === "undefined") return DEFAULT_PREFS;
+  try {
+    const raw = localStorage.getItem(PREFS_KEY);
+    if (!raw) return DEFAULT_PREFS;
+    return { ...DEFAULT_PREFS, ...JSON.parse(raw) };
+  } catch {
+    return DEFAULT_PREFS;
+  }
+}
+
+function savePrefs(p: Prefs) {
+  localStorage.setItem(PREFS_KEY, JSON.stringify(p));
+}
+
+export function SettingsPanel() {
+  const [me, setMe] = useState<MeData | null>(null);
+  const [prefs, setPrefs] = useState<Prefs>(DEFAULT_PREFS);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setPrefs(loadPrefs());
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await apiFetch<{ data: MeData }>("/auth/me");
+        if (!cancelled) setMe(res.data);
+      } catch (e) {
+        if (!cancelled) {
+          setError(
+            e instanceof ApiError && e.status === 401
+              ? "Sign in required — open /login."
+              : e instanceof Error
+                ? e.message
+                : "Failed to load profile",
+          );
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  function updatePrefs(patch: Partial<Prefs>) {
+    const next = { ...prefs, ...patch };
+    setPrefs(next);
+    savePrefs(next);
+    setSaved(true);
+    window.setTimeout(() => setSaved(false), 1500);
+  }
+
+  function signOut() {
+    clearAccessToken();
+    window.location.assign("/login");
+  }
+
+  return (
+    <div style={{ display: "grid", gap: 14, maxWidth: 820 }}>
+      <header>
+        <h1 style={{ margin: 0, fontSize: 22 }}>Settings</h1>
+        <p style={{ margin: "4px 0 0", color: "var(--cl-muted)", fontSize: 13 }}>
+          Profile, jurisdiction scope, and console preferences.
+        </p>
+      </header>
+
+      {error ? <div style={{ color: "#ff8e8e", fontSize: 13 }}>{error}</div> : null}
+      {loading ? <div style={{ color: "var(--cl-muted)" }}>Loading…</div> : null}
+
+      {me ? (
+        <Section title="Signed-in profile">
+          <div style={{ display: "grid", gap: 8, fontSize: 14 }}>
+            <Row label="Name" value={me.user.full_name} />
+            <Row label="Email" value={me.user.email} />
+            <Row label="Status" value={me.user.status} />
+            <Row label="Roles" value={me.roles.join(", ") || "—"} />
+            <Row
+              label="Jurisdictions"
+              value={
+                me.jurisdictions.district_ids.length || me.jurisdictions.station_ids.length
+                  ? `${me.jurisdictions.district_ids.length} district(s), ${me.jurisdictions.station_ids.length} station(s)`
+                  : "All (admin / unrestricted)"
+              }
+            />
+          </div>
+          <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button type="button" onClick={signOut} style={primaryBtn}>
+              Sign out
+            </button>
+            <Link href="/admin" style={ghostLink}>
+              Open Admin
+            </Link>
+          </div>
+        </Section>
+      ) : null}
+
+      <Section title="Console preferences">
+        <p style={{ margin: "0 0 12px", fontSize: 12, color: "var(--cl-muted)" }}>
+          Stored in this browser only (localStorage).
+          {saved ? " · Saved" : ""}
+        </p>
+        <label style={field}>
+          <span>Default report template</span>
+          <select
+            value={prefs.defaultReport}
+            onChange={(e) => updatePrefs({ defaultReport: e.target.value as Prefs["defaultReport"] })}
+            style={input}
+          >
+            <option value="daily">Daily Intelligence Brief</option>
+            <option value="weekly">Weekly Crime Analysis</option>
+            <option value="festival">Festival Security Assessment</option>
+          </select>
+        </label>
+        <label style={field}>
+          <span>Default map layer</span>
+          <select
+            value={prefs.mapLayer}
+            onChange={(e) => updatePrefs({ mapLayer: e.target.value as Prefs["mapLayer"] })}
+            style={input}
+          >
+            <option value="points">Points</option>
+            <option value="heatmap">Heatmap</option>
+            <option value="both">Both</option>
+          </select>
+        </label>
+        <label style={checkRow}>
+          <input
+            type="checkbox"
+            checked={prefs.showDisclaimers}
+            onChange={(e) => updatePrefs({ showDisclaimers: e.target.checked })}
+          />
+          Always show model-estimate disclaimers on AI surfaces
+        </label>
+        <label style={checkRow}>
+          <input
+            type="checkbox"
+            checked={prefs.denseUi}
+            onChange={(e) => updatePrefs({ denseUi: e.target.checked })}
+          />
+          Compact spacing (dense console)
+        </label>
+      </Section>
+
+      <Section title="Quick links">
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", fontSize: 13 }}>
+          <Link href="/reports" style={{ color: "var(--cl-accent)" }}>
+            Reports
+          </Link>
+          <Link href="/explain" style={{ color: "var(--cl-accent)" }}>
+            Explain
+          </Link>
+          <Link href="/advisor" style={{ color: "var(--cl-accent)" }}>
+            Advisor
+          </Link>
+          <Link href="/simulation" style={{ color: "var(--cl-accent)" }}>
+            Simulation
+          </Link>
+        </div>
+      </Section>
+
+      {me ? (
+        <Section title="Your permissions">
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {me.permissions.map((p) => (
+              <span key={p} style={chip}>
+                {p}
+              </span>
+            ))}
+          </div>
+        </Section>
+      ) : null}
+    </div>
+  );
+}
+
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section style={panel}>
+      <h3 style={sectionTitle}>{title}</h3>
+      {children}
+    </section>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "140px 1fr", gap: 8 }}>
+      <span style={{ color: "var(--cl-muted)" }}>{label}</span>
+      <strong style={{ fontWeight: 600 }}>{value}</strong>
+    </div>
+  );
+}
+
+const panel: CSSProperties = {
+  border: "1px solid var(--cl-border)",
+  borderRadius: 12,
+  background: "rgba(18,26,43,0.72)",
+  padding: "14px 16px",
+};
+
+const sectionTitle: CSSProperties = {
+  margin: "0 0 12px",
+  fontSize: 11,
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+  color: "var(--cl-muted)",
+};
+
+const field: CSSProperties = { display: "grid", gap: 6, marginBottom: 12, fontSize: 13 };
+const input: CSSProperties = {
+  padding: 8,
+  borderRadius: 8,
+  border: "1px solid var(--cl-border)",
+  background: "var(--cl-surface)",
+  color: "var(--cl-text)",
+};
+const checkRow: CSSProperties = {
+  display: "flex",
+  gap: 8,
+  alignItems: "center",
+  fontSize: 13,
+  marginBottom: 8,
+};
+const chip: CSSProperties = {
+  fontSize: 11,
+  padding: "4px 8px",
+  borderRadius: 6,
+  border: "1px solid var(--cl-border)",
+  color: "var(--cl-muted)",
+};
+const primaryBtn: CSSProperties = {
+  background: "var(--cl-accent)",
+  color: "#fff",
+  border: 0,
+  borderRadius: 8,
+  padding: "8px 12px",
+  fontWeight: 600,
+  cursor: "pointer",
+};
+const ghostLink: CSSProperties = {
+  border: "1px solid var(--cl-border)",
+  borderRadius: 8,
+  padding: "8px 12px",
+  color: "var(--cl-text)",
+  textDecoration: "none",
+  fontSize: 13,
+};

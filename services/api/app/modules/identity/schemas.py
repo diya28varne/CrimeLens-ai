@@ -6,18 +6,19 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 
 
 class UserPublic(BaseModel):
     id: UUID
-    email: EmailStr
+    email: str
     full_name: str
     status: Literal["active", "invited", "disabled"]
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    # Allow demo domains like .local (EmailStr rejects special-use TLDs).
+    email: str = Field(min_length=3, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
     password: str = Field(min_length=8)
     client: Literal["browser", "api"] = "browser"
 

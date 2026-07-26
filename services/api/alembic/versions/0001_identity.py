@@ -17,8 +17,6 @@ depends_on: str | Sequence[str] | None = None
 def upgrade() -> None:
     user_status = sa.Enum("active", "invited", "disabled", name="user_status")
     session_status = sa.Enum("active", "revoked", "expired", name="session_status")
-    user_status.create(op.get_bind(), checkfirst=True)
-    session_status.create(op.get_bind(), checkfirst=True)
 
     op.create_table(
         "districts",

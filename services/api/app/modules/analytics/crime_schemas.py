@@ -27,3 +27,7 @@ class BreakdownItem(BaseModel):
 
 class BreakdownResponse(BaseModel):
     data: dict
+
+
+class InsightsResponse(BaseModel):
+    data: dict

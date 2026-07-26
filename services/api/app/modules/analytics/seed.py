@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import uuid
 
 from sqlalchemy import select
@@ -15,6 +14,7 @@ from app.infra.db.models import (
     DistrictModel,
     SocioEconomicIndicatorModel,
 )
+from app.infra.async_runtime import run_async
 from app.infra.db.session import get_session_factory
 
 YEAR = 2024
@@ -210,4 +210,4 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    run_async(main())

@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-import asyncio
 import uuid
 from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.infra.async_runtime import run_async
 from app.infra.db.geo import point_geography
 from app.infra.db.models import (
     IncidentModel,
@@ -49,7 +49,9 @@ OFFENSES: list[tuple[str, str, list[tuple[str, str, SeverityLevel]]]] = [
 ]
 
 # station_code, offense_code, lon, lat, days_ago, severity
+# Includes a ~90-day arc: sparse → cluster → hotspot → neighboring spillover → easing
 SAMPLE_INCIDENTS: list[tuple[str, str, float, float, int, SeverityLevel]] = [
+    # Original near-term samples
     ("BLR-CENTRAL", "THEFT", 77.5946, 12.9716, 2, SeverityLevel.medium),
     ("BLR-CENTRAL", "BURGLARY", 77.5800, 12.9650, 5, SeverityLevel.high),
     ("BLR-CENTRAL", "CYBER_FRAUD", 77.6000, 12.9800, 1, SeverityLevel.medium),
@@ -58,6 +60,38 @@ SAMPLE_INCIDENTS: list[tuple[str, str, float, float, int, SeverityLevel]] = [
     ("BLR-CENTRAL", "THEFT", 77.6050, 12.9700, 3, SeverityLevel.low),
     ("BLR-CENTRAL", "THEFT", 77.5700, 12.9550, 15, SeverityLevel.medium),
     ("BLR-CENTRAL", "BURGLARY", 77.6100, 12.9850, 20, SeverityLevel.high),
+    # Early sparse (≈90–70 days ago)
+    ("BLR-CENTRAL", "THEFT", 77.5920, 12.9680, 88, SeverityLevel.low),
+    ("BLR-CENTRAL", "THEFT", 77.5980, 12.9740, 82, SeverityLevel.medium),
+    ("BLR-CENTRAL", "CYBER_FRAUD", 77.6010, 12.9770, 76, SeverityLevel.medium),
+    # Growing MG Road cluster (≈65–45 days)
+    ("BLR-CENTRAL", "THEFT", 77.5940, 12.9710, 65, SeverityLevel.medium),
+    ("BLR-CENTRAL", "THEFT", 77.5955, 12.9725, 62, SeverityLevel.medium),
+    ("BLR-CENTRAL", "BURGLARY", 77.5935, 12.9705, 58, SeverityLevel.high),
+    ("BLR-CENTRAL", "THEFT", 77.5960, 12.9718, 55, SeverityLevel.medium),
+    ("BLR-CENTRAL", "BURGLARY", 77.5948, 12.9722, 52, SeverityLevel.high),
+    ("BLR-CENTRAL", "ROBBERY", 77.5952, 12.9714, 48, SeverityLevel.critical),
+    ("BLR-CENTRAL", "THEFT", 77.5930, 12.9730, 45, SeverityLevel.medium),
+    # Spike + spillover east (≈42–28 days) — festival window story
+    ("BLR-CENTRAL", "THEFT", 77.6040, 12.9790, 42, SeverityLevel.medium),
+    ("BLR-CENTRAL", "THEFT", 77.6060, 12.9810, 40, SeverityLevel.medium),
+    ("BLR-CENTRAL", "BURGLARY", 77.6055, 12.9805, 38, SeverityLevel.high),
+    ("BLR-CENTRAL", "THEFT", 77.6070, 12.9785, 36, SeverityLevel.medium),
+    ("BLR-CENTRAL", "ASSAULT", 77.6035, 12.9820, 34, SeverityLevel.high),
+    ("BLR-CENTRAL", "BURGLARY", 77.6045, 12.9795, 32, SeverityLevel.high),
+    ("BLR-CENTRAL", "THEFT", 77.6080, 12.9800, 30, SeverityLevel.medium),
+    ("BLR-CENTRAL", "THEFT", 77.6020, 12.9780, 28, SeverityLevel.low),
+    # Intervention / easing narrative (≈25–10 days) — fewer near core
+    ("BLR-CENTRAL", "THEFT", 77.5500, 12.9700, 24, SeverityLevel.medium),
+    ("BLR-CENTRAL", "CYBER_FRAUD", 77.5520, 12.9680, 22, SeverityLevel.medium),
+    ("BLR-CENTRAL", "THEFT", 77.6400, 12.9780, 18, SeverityLevel.medium),
+    ("BLR-CENTRAL", "BURGLARY", 77.5950, 12.9100, 16, SeverityLevel.high),
+    ("BLR-CENTRAL", "THEFT", 77.5910, 12.9690, 14, SeverityLevel.low),
+    ("BLR-CENTRAL", "ASSAULT", 77.5890, 13.0200, 11, SeverityLevel.high),
+    ("BLR-CENTRAL", "THEFT", 77.5965, 12.9728, 9, SeverityLevel.medium),
+    ("BLR-CENTRAL", "THEFT", 77.5975, 12.9702, 7, SeverityLevel.low),
+    ("BLR-CENTRAL", "BURGLARY", 77.5810, 12.9660, 6, SeverityLevel.high),
+    ("BLR-CENTRAL", "THEFT", 77.6065, 12.9695, 4, SeverityLevel.medium),
 ]
 
 
@@ -139,4 +173,4 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    run_async(main())

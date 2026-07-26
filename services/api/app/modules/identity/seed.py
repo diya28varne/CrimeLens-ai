@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import uuid
 
 from sqlalchemy import select
@@ -23,6 +22,7 @@ from app.infra.db.models import (
     UserRoleModel,
     UserStatus,
 )
+from app.infra.async_runtime import run_async
 from app.infra.db.session import get_engine, get_session_factory
 
 
@@ -130,4 +130,4 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    run_async(main())

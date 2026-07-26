@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, useState, type CSSProperties } from "react";
-import { useRouter } from "next/navigation";
 
 import { appConfig } from "@/shared/config";
 import { setAccessToken } from "@/shared/lib/auth-storage";
@@ -14,7 +13,6 @@ type LoginResponse = {
 };
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("admin@crimelens.local");
   const [password, setPassword] = useState("ChangeMe123!");
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +23,6 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
     try {
-      // client=api returns bearer token for cross-origin SPA map/API calls
       const response = await fetch(`${appConfig.apiBaseUrl}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -42,7 +39,8 @@ export default function LoginPage() {
       if (payload?.data.access_token) {
         setAccessToken(payload.data.access_token);
       }
-      router.push("/map");
+      // Full navigation avoids App Router hook issues on Windows path-casing builds
+      window.location.assign("/map");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {

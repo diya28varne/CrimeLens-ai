@@ -122,9 +122,14 @@ export function DashboardPanel() {
       <header>
         <h1 style={{ margin: 0 }}>Dashboard</h1>
         <p style={{ margin: "6px 0 0", color: "var(--cl-muted)", fontSize: 14 }}>
-          Live incident KPIs for the last 30 days.{" "}
+          Ops at a glance — live KPIs and alerts. For period impact, spikes, and
+          socio drivers use{" "}
+          <Link href="/analytics" style={{ color: "var(--cl-accent)" }}>
+            Analytics
+          </Link>
+          .{" "}
           <Link href="/map" style={{ color: "var(--cl-accent)" }}>
-            Open map
+            Map
           </Link>
         </p>
       </header>

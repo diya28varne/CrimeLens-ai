@@ -33,6 +33,41 @@ export type CorrelationSummary = {
   interpretation: string;
 };
 
+export type AnalyticsFinding = {
+  id: string;
+  severity: "high" | "medium" | "low";
+  title: string;
+  detail: string;
+};
+
+export type AnalyticsInsights = {
+  window_days: number;
+  current: { from: string; to: string; total: number };
+  prior: { from: string; to: string; total: number };
+  delta: number;
+  pct_change: number;
+  daily: Array<{ date: string; count: number }>;
+  spikes: Array<{ date: string; count: number; vs_mean: number }>;
+  by_hour: Array<{ hour: number; count: number }>;
+  by_dow: Array<{ dow: number; label: string; count: number }>;
+  weekend: { count: number; per_day: number };
+  weekday: { count: number; per_day: number };
+  peak_hour: { hour: number; count: number };
+  concentration: {
+    top1_share_pct: number;
+    top3_share_pct: number;
+    hhi: number;
+    label: string;
+    top_offense: { code: string; name: string; count: number } | null;
+  };
+  severity: {
+    high_critical_count: number;
+    high_critical_share_pct: number;
+    by_severity: Record<string, number>;
+  };
+  findings: AnalyticsFinding[];
+};
+
 export async function fetchTrends(): Promise<{ interval: string; series: TrendSeries[] }> {
   const res = await apiFetch<{ data: { interval: string; series: TrendSeries[] } }>(
     "/analytics/trends?interval=day",
@@ -45,6 +80,13 @@ export async function fetchBreakdown(
 ): Promise<{ group_by: string; items: BreakdownItem[] }> {
   const res = await apiFetch<{ data: { group_by: string; items: BreakdownItem[] } }>(
     `/analytics/breakdown?group_by=${groupBy}`,
+  );
+  return res.data;
+}
+
+export async function fetchInsights(days = 30): Promise<AnalyticsInsights> {
+  const res = await apiFetch<{ data: AnalyticsInsights }>(
+    `/analytics/insights?days=${days}`,
   );
   return res.data;
 }

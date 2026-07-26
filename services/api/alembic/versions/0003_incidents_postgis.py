@@ -41,9 +41,6 @@ def upgrade() -> None:
         "critical",
         name="severity_level",
     )
-    incident_status.create(op.get_bind(), checkfirst=True)
-    incident_source.create(op.get_bind(), checkfirst=True)
-    severity_level.create(op.get_bind(), checkfirst=True)
 
     op.create_table(
         "offense_categories",

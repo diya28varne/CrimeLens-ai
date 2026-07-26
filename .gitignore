@@ -1,49 +1,96 @@
-# env & secrets
+# CrimeLens AI — Git ignore (enterprise baseline)
+# Never commit secrets, local env files, dependencies, or build artifacts.
+
+# ---------------------------------------------------------------------------
+# Environment & secrets
+# ---------------------------------------------------------------------------
 .env
+.env.local
+.env.development
+.env.production
+.env.*.local
 .env.*
 !.env.example
 
-# deps
-node_modules/
-.pnpm-store/
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
 .venv/
+venv/
+venv
 __pycache__/
+__pycache__
 *.py[cod]
+*$py.class
+*.pyc
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# ---------------------------------------------------------------------------
+# Node / frontend
+# ---------------------------------------------------------------------------
+node_modules/
+node_modules
+.pnpm-store/
 .turbo/
 .next/
+.next
 out/
 dist/
+dist
 build/
+build
 coverage/
+coverage
 *.lcov
 *.tsbuildinfo
 .eslintcache
+.parcel-cache/
 
-# logs
+# ---------------------------------------------------------------------------
+# Logs
+# ---------------------------------------------------------------------------
 logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
-# ml artifacts / caches
+# ---------------------------------------------------------------------------
+# ML artifacts / caches (keep .gitkeep placeholders)
+# ---------------------------------------------------------------------------
 services/ml/artifacts/**
 !services/ml/artifacts/.gitkeep
 data/.cache/**
 !data/.cache/.gitkeep
 .cache/
-.parcel-cache/
 
+# ---------------------------------------------------------------------------
 # IDE / OS
+# ---------------------------------------------------------------------------
 .idea/
+.idea
+.vscode/settings.json
 .vscode/*
 !.vscode/extensions.json
 .DS_Store
 Thumbs.db
 
-# generated clients
+# ---------------------------------------------------------------------------
+# Generated clients (keep .gitkeep)
+# ---------------------------------------------------------------------------
 apps/web/src/shared/api/generated/**
 !apps/web/src/shared/api/generated/.gitkeep
+
+# ---------------------------------------------------------------------------
+# Misc local
+# ---------------------------------------------------------------------------
+*.swp
+*.swo
+*~
+.cache/

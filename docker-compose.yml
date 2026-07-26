@@ -41,12 +41,13 @@ services:
       dockerfile: infra/docker/Dockerfile.api
     container_name: crimelens-api
     env_file:
-      - .env.example
+      - .env
     environment:
       APP_ENV: local
       POSTGRES_URL: postgresql+psycopg://${POSTGRES_USER:-crimelens}:${POSTGRES_PASSWORD:-crimelens}@db:5432/${POSTGRES_DB:-crimelens}
       REDIS_URL: redis://redis:6379/0
       CORS_ORIGINS: http://localhost:3000
+      JWT_SECRET: ${JWT_SECRET:-local-dev-only-change-me}
     ports:
       - "${API_PORT:-8000}:8000"
     depends_on:
@@ -66,11 +67,12 @@ services:
       dockerfile: infra/docker/Dockerfile.worker
     container_name: crimelens-worker
     env_file:
-      - .env.example
+      - .env
     environment:
       APP_ENV: local
       POSTGRES_URL: postgresql+psycopg://${POSTGRES_USER:-crimelens}:${POSTGRES_PASSWORD:-crimelens}@db:5432/${POSTGRES_DB:-crimelens}
       REDIS_URL: redis://redis:6379/0
+      JWT_SECRET: ${JWT_SECRET:-local-dev-only-change-me}
     depends_on:
       db:
         condition: service_healthy

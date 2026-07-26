@@ -14,7 +14,7 @@ from crimelens_domain.identity.permissions import ANALYTICS_READ
 
 from app.core.authz import require_permission
 from app.infra.db.session import get_db_session
-from app.modules.analytics.crime_schemas import BreakdownResponse, TrendResponse
+from app.modules.analytics.crime_schemas import BreakdownResponse, InsightsResponse, TrendResponse
 from app.modules.analytics.crime_service import CrimeAnalyticsService
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
@@ -64,5 +64,24 @@ async def breakdown(
             from_=from_,
             to=to,
             group_by=group_by,
+        )
+    )
+
+
+@router.get("/insights", response_model=InsightsResponse)
+async def insights(
+    service: Annotated[CrimeAnalyticsService, Depends(_service)],
+    ctx: Annotated[AuthContext, Depends(require_permission(ANALYTICS_READ))],
+    district_id: UUID | None = None,
+    station_id: UUID | None = None,
+    days: int = Query(default=30, ge=7, le=90),
+) -> InsightsResponse:
+    """Deep analysis: period compare, spikes, hour/DOW patterns, offense concentration."""
+    return InsightsResponse(
+        data=await service.insights(
+            ctx,
+            district_id=district_id,
+            station_id=station_id,
+            days=days,
         )
     )
